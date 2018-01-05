@@ -8,18 +8,21 @@ AMP := amp/a2qqg0.h \
        amp/a2qqgg0.h \
        amp/a2qqqq0.h \
        amp/a2qqggg0.h \
-       amp/a2qqqqg0.h \
-       amp/a2qqgg2.h
+       amp/a2qqqqg0.h
+
+all: me2-all
 
 amp-all: $(AMP)
 
 amp-clean:
-	rm -f  $(AMPDIR)/*.h $(AMPDIR)/*.log
+	@rm -fv  $(AMPDIR)/*.h $(AMPDIR)/*.log
 
 $(AMP): %.h: %.dat
 	@echo "make $@"
 	cd amp/; \
-	qgraf $(notdir $<) | tee  $($(notdir $@):.h=.log); \
+	ln -s $(notdir $<) qgraf.dat ; \
+	qgraf | tee  $($(notdir $@):.h=.log); \
+	rm qgraf.dat; \
 	mv amp.h $(notdir $@)
 
 ###########################################################
@@ -91,6 +94,8 @@ ME2 := me2/a2qqg_0_0.m \
        me2/a2qqqqg_0_0.m \
        me2/a2qqqqg_0_0_1_1.m
 
+me2-all: $(ME2)
+
 define me2-rule
 $(1): $(guile (me2-prerequisite "$(notdir $(1))"))
 	$(FORM) $$(guile (me2-form-args "$$(notdir $$@)")) -d ME2=$$@ src/me2.frm
@@ -121,11 +126,11 @@ check: $(CHECK)
 .PHONY: $(CHECK)
 $(CHECK): check_%: me2/%.m test/%.m
 	@echo "$@"
-	@./src/check.m $(guile (check-args "$@"))
+	@math -script ./src/check.m $(guile (check-args "$@"))
 
 $(TEST): src/testgen.m
 	@echo "make '$@'"
-	./src/testgen.m $(basename $(notdir $@)) $@ # > /dev/null
+	@math -script ./src/testgen.m $(basename $(notdir $@)) $@ # > /dev/null
 
 define CHECK_SCM
   (define (check-args name)

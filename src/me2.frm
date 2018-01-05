@@ -1,6 +1,3 @@
-#:MaxTermSize 2M
-#:WorkSpace 2G
-
 #include me4qcd.h # Declarations
 
 #define DEBUG

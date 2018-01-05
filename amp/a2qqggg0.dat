@@ -1,0 +1,17 @@
+
+output= 'amp.h' ;
+
+style= 'form.sty' ;
+
+model= 'qcd.mod';
+
+in= a[q] ;
+
+out= q[k1], Q[k2], g[k3], g[k4], g[k5] ;
+
+loops= 0;
+
+loop_momentum= ;
+
+options= ;
+

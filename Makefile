@@ -1,35 +1,33 @@
+ME2 := me2/a2qqg_0_0.m \
+       me2/a2qqgg_0_0.m \
+       me2/a2qqqq_0_0.m \
+       me2/a2qqggg_0_0.m \
+       me2/a2qqqqg_0_0.m \
+       me2/a2qqqqg_0_0_1_1.m
+
+all: $(ME2)
+
+clean: amp-clean me2-clean
+
 ###########################################################
 #
 #                    I. AMPLITUDES
 #
 ###########################################################
-AMP := amp/a2qqg0.h \
-       amp/a2qqgg0.h \
-       amp/a2qqqq0.h \
-       amp/a2qqggg0.h \
-       amp/a2qqqqg0.h
-
-all: me2-all
-
-amp-all: $(AMP)
-
-amp-clean:
-	@rm -fv  amp/*.h amp/*.log amp/*.dat
-
 define AMP_SCM
 (use-modules (ice-9 format))
 (use-modules (ice-9 receive))
 (use-modules (ice-9 regex))
 (use-modules (srfi srfi-1))
 
-(define (parse-process process)
-  (let* ((m (string-match "([aqg]+)2([aqg]+)([0-9]+)" process))
-         (proc-in (string->list (match:substring m 1)))
-         (proc-out (string->list (match:substring m 2)))
-         (proc-loops (string->number (match:substring m 3))))
-    (values proc-in proc-out proc-loops)))
+(define (parse-amplitude-id amplitude)
+  (let* ((m (string-match "([aqg]+)2([aqg]+)([0-9]+)" amplitude))
+         (in (string->list (match:substring m 1)))
+         (out (string->list (match:substring m 2)))
+         (loops (string->number (match:substring m 3))))
+    (values in out loops)))
 
-(define (format-qgraf.dat process)
+(define (format-qgraf.dat amplitude)
   (define (format-momenta tag particles momentum-base)
     (if (equal? (length particles) 1)
       (format #t "~a= ~c[~a] ;\n\n" tag (list-ref particles 0) momentum-base)
@@ -50,8 +48,8 @@ define AMP_SCM
               particles
               (iota (length particles) 1))
             ", ")))))
-  (receive (in out loops) (parse-process process)
-    (format #t "output= 'amp/~a.h' ;\n\n" process)
+  (receive (in out loops) (parse-amplitude-id amplitude)
+    (format #t "output= 'amp/~a.h' ;\n\n" amplitude)
     (format #t "style= 'amp/form.sty' ;\n\n")
     (format #t "model= 'amp/qcd.mod' ;\n\n")
     (format-momenta "in" in "q")
@@ -60,20 +58,26 @@ define AMP_SCM
     (format #t "loop_momentum= l ;\n\n")
     (format #t "options= ;\n\n")))
 
-(define (save-qgraf.dat process filename)
+(define (save-qgraf.dat amplitude filename)
   (with-output-to-file filename
-    (lambda () (format-qgraf.dat process))))
+    (lambda () (format-qgraf.dat amplitude))))
 endef
 $(guile $(AMP_SCM))
 
-%.dat:
+amp-clean:
+	@rm -fv amp/*.h amp/*.log amp/*.dat
+
+amp/%.dat:
+	@echo "make $@"
 	@$(guile (save-qgraf.dat "$(basename $(notdir $@))" "$@"))
 
-$(AMP): %.h: %.dat
+amp/%.h: amp/%.dat
 	@echo "make $@"
 	@ln -s "$^" qgraf.dat
 	@qgraf | tee  $(@:.h=.log)
 	@rm qgraf.dat
+
+.PRECIOUS: amp/%.dat amp/%.h
 
 ###########################################################
 #
@@ -87,13 +91,6 @@ define ME2_SCM
     (list
       (string-join (list "amp/" (arg 0) (arg 1) ".h") "")
       (string-join (list "amp/" (arg 0) (arg 2) ".h") ""))))
-
-(define (test-dep name)
-  (let* ((input (string-split name #\_))
-		 (arg (lambda (n) (list-ref input n))))
-    (list
-      (string-join (list (arg 1) (arg 2) ".h") "")
-      (string-join (list (arg 1) (arg 3) ".h") ""))))
 
 (define (me2-form-args filename)
   (define (make-arg name val)
@@ -136,20 +133,20 @@ $(guile $(ME2_SCM))
 
 FORM = tform -w2 -p ${PWD}/src -I ${PWD}/src -l -f -q
 
-ME2 := me2/a2qqg_0_0.m \
-       me2/a2qqgg_0_0.m \
-       me2/a2qqqq_0_0.m \
-       me2/a2qqggg_0_0.m \
-       me2/a2qqqqg_0_0.m \
-       me2/a2qqqqg_0_0_1_1.m
+.SECONDEXPANSION:
+
+me2/%.m: $$(guile (me2-prerequisite "$$(notdir $$@)"))
+	@echo "make $@"
+	$(FORM) $(guile (me2-form-args "$(notdir $@)")) -d ME2=$@ src/me2.frm
+
+me2-clean:
+	@rm -fv me2/*.m
+
+AMP=$(sort $(guile (map me2-prerequisite (string-split "$(notdir $(ME2))" \#\space))))
 
 me2-all: $(ME2)
 
-define me2-rule
-$(1): $(guile (me2-prerequisite "$(notdir $(1))"))
-	$(FORM) $$(guile (me2-form-args "$$(notdir $$@)")) -d ME2=$$@ src/me2.frm
-endef
-$(foreach me2,$(ME2),$(eval $(eval $(call me2-rule,$(me2)))))
+amp-all: $(AMP)
 
 ###########################################################
 #

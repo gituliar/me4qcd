@@ -153,31 +153,6 @@ amp-all: $(AMP)
 #                      III. TESTS
 #
 ###########################################################
-CHECK := check_a2qqg_0_0 \
-         check_a2qqgg_0_0 \
-         check_a2qqgg_0_0_1 \
-         check_a2qqgg_0_0_3 \
-         check_a2qqgg_0_0_1+3 \
-         check_a2qqqq_0_0 \
-         check_a2qqqq_0_0_1 \
-         check_a2qqqq_0_0_2 \
-         check_a2qqqq_0_0_1+2 \
-         check_a2qqqqg_0_0_1 \
-         check_a2qqqqg_0_0_9 \
-         check_a2qqqqg_0_0_1_9
-TEST = $(patsubst check_%,test/%.m,$(CHECK))
-
-check: $(CHECK)
-
-.PHONY: $(CHECK)
-$(CHECK): check_%: me2/%.m test/%.m
-	@echo "$@"
-	@math -script ./src/check.m $(guile (check-args "$@"))
-
-$(TEST): src/testgen.m
-	@echo "make '$@'"
-	@math -script ./src/testgen.m $(basename $(notdir $@)) $@ # > /dev/null
-
 define CHECK_SCM
   (define (check-args name)
     (let* ((basename (string-drop name 6))
@@ -191,3 +166,28 @@ define CHECK_SCM
        )))
 endef
 $(guile $(CHECK_SCM))
+
+CHECK := check_a2qqg_0_0 \
+         check_a2qqgg_0_0 \
+         check_a2qqgg_0_0_1 \
+         check_a2qqgg_0_0_3 \
+         check_a2qqgg_0_0_1+3 \
+         check_a2qqqq_0_0 \
+         check_a2qqqq_0_0_1 \
+         check_a2qqqq_0_0_2 \
+         check_a2qqqq_0_0_1+2 \
+         check_a2qqqqg_0_0_1 \
+         check_a2qqqqg_0_0_9 \
+         check_a2qqqqg_0_0_1_9
+
+check: $(CHECK)
+
+check_%: me2/%.m test/%.m phony
+	@echo "$@"
+	@math -script ./src/check.m $(guile (check-args "$@"))
+
+test/%.m: src/testgen.m
+	@echo "make '$@'"
+	@math -script ./src/testgen.m $(basename $(notdir $@)) $@ # > /dev/null
+
+phony:;

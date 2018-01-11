@@ -69,7 +69,7 @@ amp-clean:
 
 amp/%.dat:
 	@echo "make $@"
-	@$(guile (save-qgraf.dat "$(basename $(notdir $@))" "$@"))
+	@$(guile (save-qgraf.dat "$*" "$@"))
 
 amp/%.h: amp/%.dat
 	@echo "make $@"
@@ -142,6 +142,8 @@ me2/%.m: $$(guile (me2-prerequisite "$$(notdir $$@)"))
 me2-clean:
 	@rm -fv me2/*.m
 
+.PRECIOUS: me2/%.m
+
 AMP=$(sort $(guile (map me2-prerequisite (string-split "$(notdir $(ME2))" \#\space))))
 
 me2-all: $(ME2)
@@ -153,20 +155,6 @@ amp-all: $(AMP)
 #                      III. TESTS
 #
 ###########################################################
-define CHECK_SCM
-  (define (check-args name)
-    (let* ((basename (string-drop name 6))
-           (n (map string-length (string-split (car (string-split basename #\_)) #\2))))
-      (list
-        (string-join (list "me2/" basename ".m") "")
-        (string-join (list "test/" basename ".m") "")
-        (string-join (list "test/ps"
-                           (number->string (car n)) "to"
-                           (number->string (cadr n)) ".m") "")
-       )))
-endef
-$(guile $(CHECK_SCM))
-
 CHECK := check_a2qqg_0_0 \
          check_a2qqgg_0_0 \
          check_a2qqgg_0_0_1 \
@@ -184,10 +172,12 @@ check: $(CHECK)
 
 check_%: me2/%.m test/%.m phony
 	@echo "$@"
-	@math -script ./src/check.m $(guile (check-args "$@"))
+	@math -script ./src/check.m $* me2/$*.m test/$*.m
 
 test/%.m: src/testgen.m
 	@echo "make '$@'"
-	@math -script ./src/testgen.m $(basename $(notdir $@)) $@ # > /dev/null
+	@math -script ./src/testgen.m $* $@
+
+.PRECIOUS: test/%.m
 
 phony:;

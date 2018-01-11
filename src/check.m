@@ -1,5 +1,54 @@
-#!/usr/bin/env math-script
+Random4Momentum[Mass_] := Module[{v1, v2, v3},
+    {v1, v2, v3} = RandomReal[{-1, 1}, 3];
+    {Sqrt[Mass^2 + v1^2 + v2^2 + v3^2], v1, v2, v3}
+]
 
+RandomPhasePoint[TotalE_, Masses_] := Module[{v, e, scale, sol},
+    If[Length[Masses] == 1,
+        {{TotalE, 0, 0, 0}},
+        (* Find some arbitrary 3-momenta that sum to zero; scale
+         * them by 'scale'; calculate 4-momenta from them using
+         * the given masses; solve for 'scale' to obtain the
+         * correct total energy.
+         *)
+        v = Map[RandomReal[{-1, 1}, 3]&, Masses];
+        v = Map[scale*(# - Total[v]/Length[v])&, v];
+        e = MapThread[Sqrt[(#1)^2 + Total[#2^2]]&, {Masses, v}];
+        sol = NSolve[Total[e] == TotalE, scale];
+        MapThread[Join[{#1*(1 + $MachineEpsilon)}, #2]&, {e, v}] /. RandomChoice[sol]
+    ]
+]
+
+RandomDiagramMomenta[In_List, Out_List, Loop_List] := Module[{i, o, l, b},
+    i = RandomPhasePoint[1.0, Table[RandomReal[], Length[In]]];
+    o = RandomPhasePoint[1.0, Table[0.0, Length[Out]]];
+    l = Table[Random4Momentum[RandomReal[]], Length[Loop]];
+    Join[
+        MapThread[#1 -> #2&, {In, i}],
+        MapThread[#1 -> #2&, {Out, o}],
+        MapThread[#1 -> #2&, {Loop, l}]
+    ]
+]
+
+MomentaNames[Prefix_String, N_Integer] :=
+    If[N == 1,
+        {ToExpression[Prefix]},
+        Table[ToExpression[StringJoin[Prefix, ToString[i]]], {i, 1, N}]]
+
+DiagramMomentaNames[id_String] :=
+    StringCases[id,
+        RegularExpression["^([a-z]+)2([a-z]+)_(\\d+)_(\\d+)(_.*)?$"] ->
+            {"$1", "$2", "$3", "$4"}
+    ][[1]]
+
+RandomDiagramMomenta[id_String] := Module[{i, o, l1, l2},
+    {i, o, l1, l2} = DiagramMomentaNames[id];
+    i = MomentaNames["q", StringLength[i]];
+    o = MomentaNames["k", StringLength[o]];
+    l1 = MomentaNames["l", ToExpression[l1]];
+    l2 = MomentaNames["r", ToExpression[l2]];
+    RandomDiagramMomenta[i, o, Join[l1, l2]]
+]
 
 $Eval[got_, want_, momenta_] := Block[
   {amp, color, den, num, s, sp, r1, r2},
@@ -26,7 +75,7 @@ $Eval[got_, want_, momenta_] := Block[
   {got, want} /. momenta // Expand
 ];
 
-$Check[got_, want_] := Module[{cgot, cwant, j, pass},
+$Check[got_, want_] := Module[{cgot, cwant, pass},
   cgot  = CoefficientList[got, ep];
   cwant = CoefficientList[want, ep];
   If[
@@ -38,17 +87,7 @@ $Check[got_, want_] := Module[{cgot, cwant, j, pass},
     Return[False];
   ];
 
-  pass = True;
-  For[j=1, j<=Length[cgot], j++,
-    gj = got[[j]];
-    wj = want[[j]];
-    dd = (gj-wj)/(gj+wj);
-    If[
-      !TrueQ[-10^-7 < dd < 10^-7]
-      ,
-      pass = False
-    ];
-  ];
+  pass = And @@ MapThread[Abs[(#1 - #2)/(#1 + #2)] < 10^-7&, {cgot, cwant}];
   If[
     !TrueQ[pass]
     ,
@@ -60,17 +99,12 @@ $Check[got_, want_] := Module[{cgot, cwant, j, pass},
   pass
 ];
 
-got  = Get[$CommandLine[[4]]];
-want = Get[$CommandLine[[5]]];
-ps   = Get[$CommandLine[[6]]];
+diag = $CommandLine[[4]];
+got  = Get[$CommandLine[[5]]];
+want = Get[$CommandLine[[6]]];
 
-pass = True;
-For[i=1, i<=Length[ps], i++,
-  {ngot, nwant} = $Eval[got, want, ps[[i]]];
-  pass = pass && $Check[ngot, nwant];
-];
-If[
-  !TrueQ[pass]
-  ,
-  Exit[1]
+For[i = 1, i <= 20, i++,
+    momenta = RandomDiagramMomenta[diag];
+    {ngot, nwant} = $Eval[got, want, momenta];
+    If[!$Check[ngot, nwant], Exit[1]]
 ];

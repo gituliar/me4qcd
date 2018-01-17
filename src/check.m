@@ -20,9 +20,9 @@ RandomPhasePoint[TotalE_, Masses_] := Module[{v, e, scale, sol},
 ]
 
 RandomDiagramMomenta[In_List, Out_List, Loop_List] := Module[{i, o, l, b},
-    i = RandomPhasePoint[1.0, Table[RandomReal[], Length[In]]];
-    o = RandomPhasePoint[1.0, Table[0.0, Length[Out]]];
-    l = Table[Random4Momentum[RandomReal[]], Length[Loop]];
+    i = RandomPhasePoint[1.0, Table[RandomReal[], {Length[In]}]];
+    o = RandomPhasePoint[1.0, Table[0.0, {Length[Out]}]];
+    l = Table[Random4Momentum[RandomReal[]], {Length[Loop]}];
     Join[
         MapThread[#1 -> #2&, {In, i}],
         MapThread[#1 -> #2&, {Out, o}],

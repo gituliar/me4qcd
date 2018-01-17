@@ -1,156 +1,142 @@
 #!/usr/bin/env math-script
-
-mask = $CommandLine[[4]];
-fout = $CommandLine[[5]];
-
-mask = StringSplit[mask, "_"];
-pid[1] = mask[[1]] <> mask[[2]];
-pid[2] = mask[[1]] <> mask[[3]];
-sel[1] = {};
-sel[2] = {};
-ParseSelector[str_]:=ToExpression /@ StringSplit[str, "+"];
-Switch[
-  Length[mask]
-  ,
-  4,
-  sel[1] = mask[[4]] // ParseSelector;
-  sel[2] = mask[[4]] // ParseSelector;
-  ,
-  5,
-  sel[1] = mask[[4]] // ParseSelector;
-  sel[2] = mask[[5]] // ParseSelector;
-];
-
-
 $LoadFeynArts = True;
 << FeynCalc`;
 
+ScalarProduct[p,p] = 0;
 ScalarProduct[p1,p1] = 0;
 ScalarProduct[p2,p2] = 0;
 ScalarProduct[p3,p3] = 0;
 ScalarProduct[p4,p4] = 0;
 ScalarProduct[p5,p5] = 0;
-
 SUNN = 3;
 
-For[i=1, i<=2, i++,
-  Switch[
-    pid[i]
-    ,
-    (* 1 -> 3 tree *)
-    "a2qqg0",
-    loop[i] = 0;
-    proc[i] = {V[1]} -> {F[3,{1}], -F[3,{1}], V[5]};
-    selmod[i] = {};
-    momin = {q};
-    momout = {p1,p2,p3};
-    norm = 9/4;
-    polvirt = {q};
-    polreal = {p3};
-    ,
-    (* 1 -> 4 tree *)
-    "a2qqgg0",
-    loop[i] = 0;
-    proc[i] = {V[1]} -> {F[3,{1}], -F[3,{1}], V[5], V[5]};
-    selmod[i] = {};
-    momin = {q};
-    momout = {p1,p2,p3,p4};
-    norm = 9/4;
-    polvirt = {q};
-    polreal = {p3, p4};
-    ,
-    (* 1 -> 4 tree *)
-    "a2qqqq0",
-    loop[i] = 0;
-    proc[i] = {V[1]} -> {F[3,{1}], -F[3,{1}], F[3,{1}], -F[3,{1}]};
-    selmod[i] = {};
-    momin = {q};
-    momout = {p1,p2,p3,p4};
-    norm = 9/4;
-    polvirt = {q};
-    polreal = {};
-    ,
-    (* 1 -> 5 tree *)
-    "a2qqqq0",
-    loop[i] = 0;
-    proc[i] = {V[1]} -> {F[3,{1}], -F[3,{1}], F[3,{1}], -F[3,{1}], V[5]};
-    selmod[i] = {};
-    momin = {q};
-    momout = {p1,p2,p3,p4,p5};
-    norm = 9/4;
-    polvirt = {q};
-    polreal = {p5};
-  ];
+ParseTestId[id_String] := Module[{i, o, l1, l2, s1, s2},
+    {{i, o, l1, l2, s1, s2}} =
+        StringCases[id,
+            RegularExpression["^([a-z]+)2([a-z]+)_(\\d+)_(\\d+)(_([0-9+]+))?(_([0-9+]+))?$"] ->
+                {"$1", "$2", "$3", "$4", "$6", "$8"}];
+    {i, o, l1, l2, s1, If[s2 == "", s1, s2]}
+]
 
-  top[i] = CreateTopologies[
-    loop[i],
-    Length /@ (proc[i])
-  ];
-  diag[i] = InsertFields[
-    top[i],
-    proc[i],
-    InsertionLevel -> {Classes},
-    Model -> "SMQCD", 
-    ExcludeParticles -> {S[1], S[2], V[1], V[2]}
-  ];
-  If[
-    sel[i] =!= {}
-    ,
-    diag[i] = diag[i] /. TopologyList[m__][ds__] :> TopologyList[m][Sequence @@ List[ds][[sel[i] /. selmod[i]]]];
-  ];
+MomentaNames[Prefix_String, N_Integer] :=
+    If[N == 1,
+        {ToExpression[Prefix]},
+        Table[ToExpression[StringJoin[Prefix, ToString[i]]], {i, 1, N}]]
 
-  amp[i] = FCFAConvert[
-    CreateFeynAmp[diag[i], Truncated -> False], 
-    IncomingMomenta -> momin,
-    OutgoingMomenta -> momout, 
-    UndoChiralSplittings -> True,
-    DropSumOver -> True,
-    List -> False, 
-    SMP -> True] // Contract // ChangeDimension[#, n] &;
-];
+MomentaNames[Prefix_String, Id_String] :=
+    MomentaNames[Prefix, StringLength[Id]]
 
-Print["#1"];
-me2 = amp[1]*(ComplexConjugate[amp[2]] // FCRenameDummyIndices);
-me2 = me2 /. {SMP["g_s"] -> 1, SMP["m_u"] -> 0, SMP["e"] -> 1};
-$onshell = (Pair[Momentum[#,_],Momentum[#,_]] :> 0) & /@ {p1,p2,p3,p4,p5};
-Print[$onshell];
+Fields[Id_String] := Module[{oddq},
+    oddq = False;
+    Map[
+        Switch[#,
+            "a", V[1],
+            "q", If[oddq = !oddq, F[3,{1}], -F[3,{1}]],
+            "g", V[5]
+        ]&,
+        StringSplit[Id, ""]
+    ]
+]
+
+PolVirt[Id_String, Momenta_List] :=
+    MapThread[
+        Switch[#1, "a", #2, _, Null]&,
+        {StringSplit[Id, ""], Momenta}] //
+    DeleteCases[#, Null]&
+
+PolReal[Id_String, Momenta_List] :=
+    MapThread[
+        Switch[#1, "g", #2, _, Null] &,
+        {StringSplit[Id, ""], Momenta}] //
+    DeleteCases[#, Null]&
+
+MkAmplitude[In_, Out_, Loops_, Topologies_, LoopPrefix_] := Module[{top, diag, famp, amp},
+    Print["## CreateTopologies[", In, " -> ", Out, ", loops=", Loops, "]"];
+    top = CreateTopologies[
+        ToExpression[Loops],
+        StringLength[In] -> StringLength[Out]
+    ];
+    Print["## InsertFields"];
+    diag = InsertFields[
+        top,
+        Fields[In] -> Fields[Out],
+        InsertionLevel -> {Classes},
+        Model -> "SMQCD",
+        ExcludeParticles -> {S, U, SV, V[1], V[2], V[3], V[4], F[1], F[2]}
+    ];
+    If[Topologies =!= "",
+        Print["## SelectTopologies[", Topologies, "]"];
+        diag = diag /.
+            TopologyList[m__][ds__] :>
+            TopologyList[m][
+                Sequence @@ List[ds][[ToExpression[StringSplit[Topologies, "+"]]]]]];
+    Print["## CreateFeynAmp"];
+    famp = CreateFeynAmp[diag, Truncated -> False];
+    Print["## FCFAConvert"];
+    amp = FCFAConvert[
+        famp,
+        IncomingMomenta -> MomentaNames["q", In],
+        OutgoingMomenta -> MomentaNames["p", Out],
+        LoopMomenta -> MomentaNames[LoopPrefix, ToExpression[Loops]],
+        UndoChiralSplittings -> True,
+        DropSumOver -> True,
+        ChangeDimension -> n,
+        List -> False,
+        SMP -> True];
+    Print["## Contract, SUNSimplify"];
+    amp = amp /. {SMP["g_s"] -> 1, SMP["m_u"] -> 0, SMP["e"] -> 1};
+    amp = amp // Contract // SUNSimplify[#, SUNNToCACF -> False] &
+]
+
+$testid = $CommandLine[[4]];
+$filename = $CommandLine[[5]];
+
+{$i, $o, $l1, $l2, $s1, $s2} = ParseTestId[$testid];
+Print["# ", $i, " -> ", $o, "; l1=", $l1, ", l2=", $l2];
+a1 = MkAmplitude[$i, $o, $l1, $s1, "l"];
+a2 = MkAmplitude[$i, $o, $l2, $s2, "r"];
+me2 = a1*(ComplexConjugate[a2] // FCRenameDummyIndices);
+
+Print["# SUNSimplify"];
+me2 = me2 // SUNSimplify[#, SUNNToCACF -> False] &;
+
+Print["# PropagatorDenominatorExplicit"];
+me2 = me2 // PropagatorDenominatorExplicit;
+
+$onshell = (Pair[Momentum[#, _], Momentum[#, _]] :> 0) & /@ MomentaNames["p", $o];
 me2 = me2 /. $onshell
 
-Print["#2.1"];
-me2 = me2 // PropagatorDenominatorExplicit;
-Print["#2.2"];
+Print["# FermionSpinSum"];
 me2 = me2 // FermionSpinSum;
-Print["#2.3"];
+
+Print["# DiracTrace -> Tr"];
 me2 = me2 /. $onshell;
 me2 = me2 // ReplaceAll[#, {DiracTrace -> Tr}]&;
-Print[me2];
 me2 = me2 /. $onshell;
 
-Print["#3"];
-For[i=1, i<=Length[polvirt], i++,
-  Print["#3.",i];
-  me2 = me2 // DoPolarizationSums[#, polvirt[[i]], 0, VirtualBoson -> True, GaugeTrickN -> 4]&;
-(*
-  Print[me2];
-*)
-  me2 = me2 /. $onshell;
+Do[
+    Print["# DoPolarizationSums[..., ", p, ", GaugeTrickN -> 4]"];
+    me2 = DoPolarizationSums[me2, p, 0, VirtualBoson -> True, GaugeTrickN -> 4];
+    me2 = me2 /. $onshell,
+    {p, PolVirt[$i, MomentaNames["q", $i]]}
 ];
 
-Print["#4"];
-For[i=1, i<=Length[polreal], i++,
-  Print["#4.",i];
-  me2 = me2 // DoPolarizationSums[#, polreal[[i]], 0]&;
-(*
-  Print[me2];
-*)
-  me2 = me2 /. $onshell;
+Do[
+    Print["# DoPolarizationSums[..., ", p, "]"];
+    me2 = DoPolarizationSums[me2, p, 0];
+    me2 = me2 /. $onshell,
+    {p, PolReal[$o, MomentaNames["p", $o]]}
 ];
 
-Print["#5"];
+Print["# Expand"];
+me2 = me2 /. Rule[Explicit, False] -> Rule[Explicit, True] // Expand;
+Print["# SUNSimplify"];
 me2 = me2 // SUNSimplify[#, SUNNToCACF -> False] &;
-me2 = me2 /. Rule[Explicit, False] -> Rule[Explicit, True] // Expand // SUNSimplify[#, SUNNToCACF -> False] &;
 
-me2 = me2 //. {Pair[Momentum[k1_, _], Momentum[k2_, _]] -> sp[k1, k2], p1 -> k1, p2 -> k2, p3 -> k3, p4 -> k4, p5 -> k5};
+norm = 9/4;
+me2 = me2 //. Pair[Momentum[k1_, _], Momentum[k2_, _]] -> sp[k1, k2];
+me2 = me2 /. MapThread[#1 -> #2&, {MomentaNames["p", $o], MomentaNames["k", $o]}];
 me2 = norm * me2 /. {n -> 4 - 2 ep, SUNN -> 3} /. $onshell;
 
-Put[me2, fout];
+(*Print["# Res=",me2]*)
+Put[me2, $filename];

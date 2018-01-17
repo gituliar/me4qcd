@@ -9,6 +9,10 @@ all: $(ME2)
 
 clean: amp-clean me2-clean
 
+ifneq "$(filter guile,$(.FEATURES))" "guile"
+    $(error This Makefile requires GNU make with Guile support)
+endif
+
 ###########################################################
 #
 #                    I. AMPLITUDES
@@ -73,6 +77,7 @@ amp/%.dat:
 
 amp/%.h: amp/%.dat
 	@echo "make $@"
+	@rm -f "$@"
 	@ln -s "$^" qgraf.dat
 	@qgraf | tee  $(@:.h=.log)
 	@rm qgraf.dat
@@ -131,7 +136,9 @@ define ME2_SCM
 endef
 $(guile $(ME2_SCM))
 
-FORM = tform -w2 -p ${PWD}/src -I ${PWD}/src -l -f -q
+TMPDIR ?= /tmp
+
+FORM = tform -w2 -M -t "${TMPDIR}" -ts "${TMPDIR}" -p src -I src -l -f -q
 
 .SECONDEXPANSION:
 
@@ -156,17 +163,18 @@ amp-all: $(AMP)
 #
 ###########################################################
 CHECK := check_a2qqg_0_0 \
-         check_a2qqgg_0_0 \
          check_a2qqgg_0_0_1 \
-         check_a2qqgg_0_0_3 \
          check_a2qqgg_0_0_1+3 \
-         check_a2qqqq_0_0 \
+         check_a2qqgg_0_0_3 \
+         check_a2qqgg_0_0 \
          check_a2qqqq_0_0_1 \
-         check_a2qqqq_0_0_2 \
          check_a2qqqq_0_0_1+2 \
+         check_a2qqqq_0_0_1+3 \
+         check_a2qqqq_0_0_2 \
+         check_a2qqqq_0_0 \
          check_a2qqqqg_0_0_1 \
-         check_a2qqqqg_0_0_9 \
-         check_a2qqqqg_0_0_1_9
+         check_a2qqqqg_0_0_1_9 \
+         check_a2qqqqg_0_0_9
 
 check: $(CHECK)
 

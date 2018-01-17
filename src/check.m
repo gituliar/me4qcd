@@ -35,14 +35,14 @@ MomentaNames[Prefix_String, N_Integer] :=
         {ToExpression[Prefix]},
         Table[ToExpression[StringJoin[Prefix, ToString[i]]], {i, 1, N}]]
 
-DiagramMomentaNames[id_String] :=
+ParseDiagramId[id_String] :=
     StringCases[id,
         RegularExpression["^([a-z]+)2([a-z]+)_(\\d+)_(\\d+)(_.*)?$"] ->
             {"$1", "$2", "$3", "$4"}
     ][[1]]
 
 RandomDiagramMomenta[id_String] := Module[{i, o, l1, l2},
-    {i, o, l1, l2} = DiagramMomentaNames[id];
+    {i, o, l1, l2} = ParseDiagramId[id];
     i = MomentaNames["q", StringLength[i]];
     o = MomentaNames["k", StringLength[o]];
     l1 = MomentaNames["l", ToExpression[l1]];
@@ -71,6 +71,7 @@ $Eval[got_, want_, momenta_] := Block[
   
   k = {-q,k1,k2,k3,k4,k5};
   s[i_,j_] := sp[k[[i]]+k[[j]]];
+  NF = 3;
 
   {got, want} /. momenta // Expand
 ];
@@ -96,7 +97,7 @@ $Check[got_, want_] := Module[{cgot, cwant, pass},
     Print["        want = ", want];
     Print["        diff = ", got-want];
   ];
-  pass
+  TrueQ[pass]
 ];
 
 diag = $CommandLine[[4]];

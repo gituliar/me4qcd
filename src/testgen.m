@@ -133,6 +133,10 @@ Do[
 
 Print["# Expand"];
 me2 = me2 /. Rule[Explicit, False] -> Rule[Explicit, True] // Expand;
+
+Print["# Contract"];
+me2 = me2 // Contract;
+
 Print["# SUNSimplify"];
 me2 = me2 // SUNSimplify[#, SUNNToCACF -> False] &;
 

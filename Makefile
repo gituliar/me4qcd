@@ -67,10 +67,10 @@ amp/%.dat:
 	@echo "make $@"
 	@$(guile (save-qgraf.dat "$*" "$@"))
 
-amp/%.h: amp/%.dat
+amp/%.h: amp/%.dat amp/qcd.mod amp/form.sty
 	@echo "make $@"
 	@rm -f "$@"
-	@ln -s "$^" qgraf.dat
+	@ln -s "amp/$*.dat" qgraf.dat
 	@qgraf | tee  $(@:.h=.log)
 	@rm qgraf.dat
 

@@ -2,41 +2,40 @@
 $LoadFeynArts = True;
 << FeynCalc`;
 
-ScalarProduct[p,p] = 0;
-ScalarProduct[p1,p1] = 0;
-ScalarProduct[p2,p2] = 0;
-ScalarProduct[p3,p3] = 0;
-ScalarProduct[p4,p4] = 0;
-ScalarProduct[p5,p5] = 0;
+ScalarProduct[k,k] = 0;
+ScalarProduct[k1,k1] = 0;
+ScalarProduct[k2,k2] = 0;
+ScalarProduct[k3,k3] = 0;
+ScalarProduct[k4,k4] = 0;
+ScalarProduct[k5,k5] = 0;
 SUNN = 3;
 
 ParseTestId[id_String] := Module[{i, o, l1, l2, s1, s2},
     {{i, o, l1, l2, s1, s2}} =
         StringCases[id,
-            RegularExpression["^([a-z]+)2([a-z]+)_(\\d+)_(\\d+)(_([0-9+]+))?(_([0-9+]+))?$"] ->
+            RegularExpression["^([auUdDg]+)2([auUdDg]+)_(\\d+)_(\\d+)(_([0-9+]+))?(_([0-9+]+))?$"] ->
                 {"$1", "$2", "$3", "$4", "$6", "$8"}];
     {i, o, l1, l2, s1, If[s2 == "", s1, s2]}
 ]
 
-MomentaNames[Prefix_String, N_Integer] :=
+MomentaNames[N_Integer, Prefix_String, SingleName_String] :=
     If[N == 1,
-        {ToExpression[Prefix]},
+        {ToExpression[SingleName]},
         Table[ToExpression[StringJoin[Prefix, ToString[i]]], {i, 1, N}]]
 
-MomentaNames[Prefix_String, Id_String] :=
-    MomentaNames[Prefix, StringLength[Id]]
+MomentaNames[Id_String, Prefix_String, SingleName_String] :=
+    MomentaNames[StringLength[Id], Prefix, SingleName]
 
-Fields[Id_String] := Module[{oddq},
-    oddq = False;
-    Map[
-        Switch[#,
-            "a", V[1],
-            "q", If[oddq = !oddq, F[3,{1}], -F[3,{1}]],
-            "g", V[5]
-        ]&,
-        StringSplit[Id, ""]
-    ]
-]
+Fields[Id_String] := Map[
+    Switch[#,
+        "a", V[1],
+        "u", F[3, {1}],
+        "U", -F[3, {1}],
+        "d", F[3, {2}],
+        "D", -F[3, {2}],
+        "g", V[5]
+    ]&,
+    StringSplit[Id, ""]]
 
 PolVirt[Id_String, Momenta_List] :=
     MapThread[
@@ -75,16 +74,16 @@ MkAmplitude[In_, Out_, Loops_, Topologies_, LoopPrefix_] := Module[{top, diag, f
     Print["## FCFAConvert"];
     amp = FCFAConvert[
         famp,
-        IncomingMomenta -> MomentaNames["q", In],
-        OutgoingMomenta -> MomentaNames["p", Out],
-        LoopMomenta -> MomentaNames[LoopPrefix, ToExpression[Loops]],
+        IncomingMomenta -> MomentaNames[In, "p", "q"],
+        OutgoingMomenta -> MomentaNames[Out, "k", "k"],
+        LoopMomenta -> MomentaNames[ToExpression[Loops], LoopPrefix, StringJoin[LoopPrefix, "1"]],
         UndoChiralSplittings -> True,
         DropSumOver -> True,
         ChangeDimension -> n,
         List -> False,
         SMP -> True];
     Print["## Contract, SUNSimplify"];
-    amp = amp /. {SMP["g_s"] -> 1, SMP["m_u"] -> 0, SMP["e"] -> 1};
+    amp = amp /. {SMP["g_s"] -> 1, SMP["m_u"] -> 0, SMP["e"] -> 1, MQD[_] -> 0, MQU[_] -> 0};
     amp = amp // Contract // SUNSimplify[#, SUNNToCACF -> False] &
 ]
 
@@ -103,7 +102,7 @@ me2 = me2 // SUNSimplify[#, SUNNToCACF -> False] &;
 Print["# PropagatorDenominatorExplicit"];
 me2 = me2 // PropagatorDenominatorExplicit;
 
-$onshell = (Pair[Momentum[#, _], Momentum[#, _]] :> 0) & /@ MomentaNames["p", $o];
+$onshell = (Pair[Momentum[#, _], Momentum[#, _]] :> 0) & /@ MomentaNames[$o, "k", "k"];
 me2 = me2 /. $onshell
 
 Print["# FermionSpinSum"];
@@ -115,17 +114,21 @@ me2 = me2 // ReplaceAll[#, {DiracTrace -> Tr}]&;
 me2 = me2 /. $onshell;
 
 Do[
-    Print["# DoPolarizationSums[..., ", p, ", GaugeTrickN -> 4]"];
-    me2 = DoPolarizationSums[me2, p, 0, VirtualBoson -> True, GaugeTrickN -> 4];
+    Print["# DoPolarizationSums[..., ", moment, ", GaugeTrickN -> 4]"];
+    me2 = DoPolarizationSums[me2, moment, 0, VirtualBoson -> True, GaugeTrickN -> 4];
     me2 = me2 /. $onshell,
-    {p, PolVirt[$i, MomentaNames["q", $i]]}
+    {moment, Join[
+        PolVirt[$i, MomentaNames[$i, "p", "q"]],
+        PolVirt[$o, MomentaNames[$o, "k", "k"]]]}
 ];
 
 Do[
-    Print["# DoPolarizationSums[..., ", p, "]"];
-    me2 = DoPolarizationSums[me2, p, 0];
+    Print["# DoPolarizationSums[..., ", moment, "]"];
+    me2 = DoPolarizationSums[me2, moment, 0];
     me2 = me2 /. $onshell,
-    {p, PolReal[$o, MomentaNames["p", $o]]}
+    {moment, Join[
+        PolReal[$i, MomentaNames[$i, "p", "q"]],
+        PolReal[$o, MomentaNames[$o, "k", "k"]]]}
 ];
 
 Print["# Expand"];
@@ -135,7 +138,6 @@ me2 = me2 // SUNSimplify[#, SUNNToCACF -> False] &;
 
 norm = 9/4;
 me2 = me2 //. Pair[Momentum[k1_, _], Momentum[k2_, _]] -> sp[k1, k2];
-me2 = me2 /. MapThread[#1 -> #2&, {MomentaNames["p", $o], MomentaNames["k", $o]}];
 me2 = norm * me2 /. {n -> 4 - 2 ep, SUNN -> 3} /. $onshell;
 
 (*Print["# Res=",me2]*)

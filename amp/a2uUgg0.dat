@@ -1,4 +1,4 @@
-output= 'amp/a2qqg0.h' ;
+output= 'amp/a2uUgg0.h' ;
 
 style= 'amp/form.sty' ;
 
@@ -6,7 +6,7 @@ model= 'amp/qcd.mod' ;
 
 in= a[q] ;
 
-out= q[k1], Q[k2], g[k3] ;
+out= u[k1], U[k2], g[k3], g[k4] ;
 
 loops= 0 ;
 

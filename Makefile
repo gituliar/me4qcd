@@ -1,9 +1,9 @@
-ME2 := me2/a2qqg_0_0.m \
-       me2/a2qqgg_0_0.m \
-       me2/a2qqqq_0_0.m \
-       me2/a2qqggg_0_0.m \
-       me2/a2qqqqg_0_0.m \
-       me2/a2qqqqg_0_0_1_1.m
+ME2 := me2/a2uUg_0_0.m \
+       me2/a2uUgg_0_0.m \
+       me2/a2uUuU_0_0.m \
+       me2/a2uUggg_0_0.m \
+       me2/a2uUuUg_0_0.m \
+       me2/a2uUuUg_0_0_1_1.m
 
 all: $(ME2)
 
@@ -25,39 +25,31 @@ define AMP_SCM
 (use-modules (srfi srfi-1))
 
 (define (parse-amplitude-id amplitude)
-  (let* ((m (string-match "([aqg]+)2([aqg]+)([0-9]+)" amplitude))
+  (let* ((m (string-match "([auUdDg]+)2([auUdDg]+)([0-9]+)" amplitude))
          (in (string->list (match:substring m 1)))
          (out (string->list (match:substring m 2)))
          (loops (string->number (match:substring m 3))))
     (values in out loops)))
 
 (define (format-qgraf.dat amplitude)
-  (define (format-momenta tag particles momentum-base)
+  (define (format-momenta tag particles momentum-prefix momentum-1)
     (if (equal? (length particles) 1)
-      (format #t "~a= ~c[~a] ;\n\n" tag (list-ref particles 0) momentum-base)
-      (let ((nq 0))
-        (format #t "~a= ~a ;\n\n"
-          tag
-          (string-join
-            (map
-              (lambda (p i)
-                (format #f "~c[~a~d]"
-                  (case p
-                    ((#\q)
-                      (set! nq (+ nq 1))
-                      (if (odd? nq) #\q #\Q))
-                    (else p))
-                  momentum-base
-                  i))
-              particles
-              (iota (length particles) 1))
-            ", ")))))
+      (format #t "~a= ~c[~a] ;\n\n" tag (list-ref particles 0) momentum-1)
+      (format #t "~a= ~a ;\n\n"
+        tag
+        (string-join
+          (map
+            (lambda (p i)
+              (format #f "~c[~a~d]" p momentum-prefix i))
+            particles
+            (iota (length particles) 1))
+          ", "))))
   (receive (in out loops) (parse-amplitude-id amplitude)
     (format #t "output= 'amp/~a.h' ;\n\n" amplitude)
     (format #t "style= 'amp/form.sty' ;\n\n")
     (format #t "model= 'amp/qcd.mod' ;\n\n")
-    (format-momenta "in" in "q")
-    (format-momenta "out" out "k")
+    (format-momenta "in" in "p" "q")
+    (format-momenta "out" out "k" "k")
     (format #t "loops= ~d ;\n\n" loops)
     (format #t "loop_momentum= l ;\n\n")
     (format #t "options= ;\n\n")))
@@ -162,19 +154,19 @@ amp-all: $(AMP)
 #                      III. TESTS
 #
 ###########################################################
-CHECK := check_a2qqg_0_0 \
-         check_a2qqgg_0_0_1 \
-         check_a2qqgg_0_0_1+3 \
-         check_a2qqgg_0_0_3 \
-         check_a2qqgg_0_0 \
-         check_a2qqqq_0_0_1 \
-         check_a2qqqq_0_0_1+2 \
-         check_a2qqqq_0_0_1+3 \
-         check_a2qqqq_0_0_2 \
-         check_a2qqqq_0_0 \
-         check_a2qqqqg_0_0_1 \
-         check_a2qqqqg_0_0_1_9 \
-         check_a2qqqqg_0_0_9
+CHECK := check_a2uUg_0_0 \
+         check_a2uUgg_0_0_1 \
+         check_a2uUgg_0_0_1+3 \
+         check_a2uUgg_0_0_3 \
+         check_a2uUuU_0_0_1 \
+         check_a2uUuU_0_0_1+2 \
+         check_a2uUuU_0_0_1+3 \
+         check_a2uUuU_0_0_2 \
+         check_a2uUuUg_0_0_1 \
+         check_a2uUuUg_0_0_1_9 \
+         check_a2uUuUg_0_0_9 \
+         check_a2uUgg_0_0 \
+         check_a2uUuU_0_0
 
 check: $(CHECK)
 

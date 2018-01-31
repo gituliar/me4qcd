@@ -1,46 +1,25 @@
 
 #   PROPAGATORS
 #
-    [a, a, +, external;  color_id='cj', field_id='Photon',
-                         index_id='v',
-                         prop_id='A',
-                         anti_in_id=(''),
-                         anti_out_id=('')]
+    [a, a, +, external]
 
-    [q,  Q, -, notadpole; color_id='ci',
-                          field_id='Quark',
-                          index_id='s',
-                          prop_id='Q',
-                          anti_in_id=('U','Vx'),
-                          anti_out_id=('Ux','V')]
+    [u, U, -, notadpole]
 
-    [g,  g,  +, notadpole; color_id='cj', field_id='Gluon',
-                           index_id='v',
-                           prop_id='G',
-                           anti_in_id=(''),
-                           anti_out_id=('')]
+    [d, D, -, notadpole]
 
-#
-#   color_id represents color indices and is
-#      * ci<n> in fundamental (NF-dimensional) representation
-#      * cj<n> in adjoint (NA-dimensional) representation
-#   field_id is
-#      * a for photon
-#      * g for gluon
-#      * q for quark
-#      * Q for anti-quark
-#   index_id is
-#      * v<n> for vector indices
-#      * s<n> for spinor indices
-   
+    [g, g, +, notadpole]
 
 #   VERTICES
 #
-    [q, Q, a;     vertex_id='VQQA']
+    [u, U, a;     vertex_id='VQQA']
 
-    [q, Q, g;     vertex_id='VQQG']
+    [d, D, a;     vertex_id='VQQA']
 
-    [g, g, g;      vertex_id='VGGG']
+    [u, U, g;     vertex_id='VQQG']
+
+    [d, D, g;     vertex_id='VQQG']
+
+    [g, g, g;     vertex_id='VGGG']
 
     [g, g, g, g;  vertex_id='VGGGG']
 #

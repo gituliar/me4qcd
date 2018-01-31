@@ -30,23 +30,26 @@ RandomDiagramMomenta[In_List, Out_List, Loop_List] := Module[{i, o, l, b},
     ]
 ]
 
-MomentaNames[Prefix_String, N_Integer] :=
-    If[N == 1,
-        {ToExpression[Prefix]},
+MomentaNames[N_Integer, Prefix_String, SingleName_String] :=
+    If[(N == 1),
+        {ToExpression[SingleName]},
         Table[ToExpression[StringJoin[Prefix, ToString[i]]], {i, 1, N}]]
+
+MomentaNames[Id_String, Prefix_String, SingleName_String] :=
+    MomentaNames[StringLength[Id], Prefix, SingleName]
 
 ParseDiagramId[id_String] :=
     StringCases[id,
-        RegularExpression["^([a-z]+)2([a-z]+)_(\\d+)_(\\d+)(_.*)?$"] ->
+        RegularExpression["^([auUdDg]+)2([auUdDg]+)_(\\d+)_(\\d+)(_.*)?$"] ->
             {"$1", "$2", "$3", "$4"}
     ][[1]]
 
 RandomDiagramMomenta[id_String] := Module[{i, o, l1, l2},
     {i, o, l1, l2} = ParseDiagramId[id];
-    i = MomentaNames["q", StringLength[i]];
-    o = MomentaNames["k", StringLength[o]];
-    l1 = MomentaNames["l", ToExpression[l1]];
-    l2 = MomentaNames["r", ToExpression[l2]];
+    i = MomentaNames[i, "p", "q"];
+    o = MomentaNames[o, "k", "k"];
+    l1 = MomentaNames[ToExpression[l1], "l", "l1"];
+    l2 = MomentaNames[ToExpression[l2], "r", "r1"];
     RandomDiagramMomenta[i, o, Join[l1, l2]]
 ]
 

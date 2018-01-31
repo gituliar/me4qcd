@@ -22,6 +22,9 @@ Skip;
     + ampx(`i')*(
     #include `AMPx' # d`i'
     )
+    #do j=1,9
+        * replace_(l`j', r`j')
+    #enddo
   #enddo
   ;
 #endif

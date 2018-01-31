@@ -31,8 +31,8 @@ Fields[Id_String] := Map[
         "a", V[1],
         "u", F[3, {1}],
         "U", -F[3, {1}],
-        "d", F[3, {2}],
-        "D", -F[3, {2}],
+        "d", F[4, {1}],
+        "D", -F[4, {1}],
         "g", V[5]
     ]&,
     StringSplit[Id, ""]]
@@ -83,7 +83,7 @@ MkAmplitude[In_, Out_, Loops_, Topologies_, LoopPrefix_] := Module[{top, diag, f
         List -> False,
         SMP -> True];
     Print["## Contract, SUNSimplify"];
-    amp = amp /. {SMP["g_s"] -> 1, SMP["m_u"] -> 0, SMP["e"] -> 1, MQD[_] -> 0, MQU[_] -> 0};
+    amp = amp /. {SMP["g_s"] -> 1, SMP["m_d"] -> 0, SMP["m_u"] -> 0, SMP["e"] -> 1, MQD[_] -> 0, MQU[_] -> 0};
     amp = amp // Contract // SUNSimplify[#, SUNNToCACF -> False] &
 ]
 

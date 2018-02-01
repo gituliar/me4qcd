@@ -93,7 +93,8 @@ $Check[got_, want_] := Module[{cgot, cwant, pass},
     Print["[FAIL] Expressions look different"];
     Print["         got = ", got];
     Print["        want = ", want];
-    Print["        diff = ", got-want];
+    Print["        diff = ", MapThread[#1-#2&, {cgot, cwant}]];
+    Print["       ratio = ", MapThread[#1/#2&, {cgot, cwant}]];
   ];
   TrueQ[pass]
 ];

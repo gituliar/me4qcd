@@ -20,7 +20,7 @@ RandomPhasePoint[TotalE_, Masses_] := Module[{v, e, scale, sol},
 ]
 
 RandomDiagramMomenta[In_List, Out_List, Loop_List] := Module[{i, o, l, b},
-    i = RandomPhasePoint[1.0, Table[RandomReal[], {Length[In]}]];
+    i = RandomPhasePoint[1.0, If[Length[In] === 1, {1.0}, Table[0.0, {Length[In]}]]];
     o = RandomPhasePoint[1.0, Table[0.0, {Length[Out]}]];
     l = Table[Random4Momentum[RandomReal[]], {Length[Loop]}];
     Join[
@@ -53,30 +53,24 @@ RandomDiagramMomenta[id_String] := Module[{i, o, l1, l2},
     RandomDiagramMomenta[i, o, Join[l1, l2]]
 ]
 
-$Eval[got_, want_, momenta_] := Block[
-  {amp, color, den, num, s, sp, r1, r2},
-
-  sp[{Ep_,px_,py_,pz_}] := Ep^2-px^2-py^2-pz^2;
-  sp[{Ep_,px_,py_,pz_},{Eq_,qx_,qy_,qz_}] := Ep*Eq-px*qx-py*qy-pz*qz;
-  
-  amp[_,_] := 1;
-  
-  color[ex_] := ex /. {
-    Tf -> 1/2,
-    Ca -> 3,
-    Cf -> 4/3,
-    Nf -> 3,
-    Na -> 8};
-  SUNN = 3;
-  
-  den[ex_] := 1/ex;
-  num[ex_] := ex;
-  
-  k = {-q,k1,k2,k3,k4,k5};
-  s[i_,j_] := sp[k[[i]]+k[[j]]];
-  NF = 3;
-
-  {got, want} /. momenta // Expand
+$Eval[got_, want_, momenta_] := Expand[
+    {got, want} /. momenta //. {
+        sp[{Ep_,px_,py_,pz_}] :> Ep^2-px^2-py^2-pz^2,
+        sp[{Ep_,px_,py_,pz_}, {Eq_,qx_,qy_,qz_}] :> Ep*Eq-px*qx-py*qy-pz*qz,
+        amp[_, _] :> 1,
+        color[ex_] :> ex /. {
+            Tf -> 1/2,
+            Ca -> 3,
+            Cf -> 4/3,
+            Nf -> 3,
+            Na -> 8
+        },
+        SUNN -> 3,
+        den[ex_] :> 1/ex,
+        num[ex_] :> ex,
+        NF -> 3,
+        N -> 3
+    }
 ];
 
 $Check[got_, want_] := Module[{cgot, cwant, pass},

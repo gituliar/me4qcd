@@ -8,6 +8,12 @@ ScalarProduct[k2,k2] = 0;
 ScalarProduct[k3,k3] = 0;
 ScalarProduct[k4,k4] = 0;
 ScalarProduct[k5,k5] = 0;
+ScalarProduct[p,p] = 0;
+ScalarProduct[p1,p1] = 0;
+ScalarProduct[p2,p2] = 0;
+ScalarProduct[p3,p3] = 0;
+ScalarProduct[p4,p4] = 0;
+ScalarProduct[p5,p5] = 0;
 SUNN = 3;
 
 ParseTestId[id_String] := Module[{i, o, l1, l2, s1, s2},
@@ -96,22 +102,28 @@ a1 = MkAmplitude[$i, $o, $l1, $s1, "l"];
 a2 = MkAmplitude[$i, $o, $l2, $s2, "r"];
 me2 = a1*(ComplexConjugate[a2] // FCRenameDummyIndices);
 
+Print["# FermionSpinSum"];
+me2 = me2 // FermionSpinSum;
+
 Print["# SUNSimplify"];
 me2 = me2 // SUNSimplify[#, SUNNToCACF -> False] &;
 
 Print["# PropagatorDenominatorExplicit"];
 me2 = me2 // PropagatorDenominatorExplicit;
 
-$onshell = (Pair[Momentum[#, _], Momentum[#, _]] :> 0) & /@ MomentaNames[$o, "k", "k"];
+(* Note: this list never includes q^2 == 0 *)
+$onshell = Map[
+    (Pair[Momentum[#, _], Momentum[#, _]] :> 0) &,
+    Join[MomentaNames[$i, "p", "p"], MomentaNames[$o, "k", "k"]]];
 me2 = me2 /. $onshell
-
-Print["# FermionSpinSum"];
-me2 = me2 // FermionSpinSum;
 
 Print["# DiracTrace -> Tr"];
 me2 = me2 /. $onshell;
 me2 = me2 // ReplaceAll[#, {DiracTrace -> Tr}]&;
 me2 = me2 /. $onshell;
+
+Print["# CalcColorFactor"];
+me2 = me2 // CalcColorFactor;
 
 Do[
     Print["# DoPolarizationSums[..., ", moment, ", GaugeTrickN -> 4]"];
@@ -140,9 +152,8 @@ me2 = me2 // Contract;
 Print["# SUNSimplify"];
 me2 = me2 // SUNSimplify[#, SUNNToCACF -> False] &;
 
-norm = 9/4;
-me2 = me2 //. Pair[Momentum[k1_, _], Momentum[k2_, _]] -> sp[k1, k2];
-me2 = norm * me2 /. {n -> 4 - 2 ep, SUNN -> 3} /. $onshell;
+me2 = me2 //. Pair[Momentum[a_, _], Momentum[b_, _]] -> sp[a, b];
+me2 = me2 /. {n -> 4 - 2 ep, SUNN -> 3} /. $onshell;
 
 (*Print["# Res=",me2]*)
 Put[me2, $filename];

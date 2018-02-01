@@ -154,7 +154,10 @@ amp-all: $(AMP)
 #                      III. TESTS
 #
 ###########################################################
-CHECK := check_a2uUg_0_0 \
+CHECK := check_uU2UU_0_0 \
+	 check_a2uU_0_0 \
+	 check_a2dD_0_0 \
+	 check_uU2uUg_0_0_1 \
          check_a2uUgg_0_0_1 \
          check_a2uUgg_0_0_1+3 \
          check_a2uUgg_0_0_3 \
@@ -165,6 +168,7 @@ CHECK := check_a2uUg_0_0 \
          check_a2uUuUg_0_0_1 \
          check_a2uUuUg_0_0_1_9 \
          check_a2uUuUg_0_0_9 \
+	 check_uU2uUg_0_0 \
          check_a2uUgg_0_0 \
          check_a2uUuU_0_0
 

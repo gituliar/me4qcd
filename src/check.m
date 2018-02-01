@@ -69,6 +69,7 @@ $Eval[got_, want_, momenta_] := Expand[
         den[ex_] :> 1/ex,
         num[ex_] :> ex,
         NF -> 3,
+        NA -> 8,
         N -> 3
     }
 ];

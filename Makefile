@@ -154,7 +154,7 @@ amp-all: $(AMP)
 #                      III. TESTS
 #
 ###########################################################
-CHECK := check_uU2UU_0_0 \
+CHECK := check_uU2uU_0_0 \
 	 check_a2uU_0_0 \
 	 check_a2dD_0_0 \
 	 check_uU2uUg_0_0_1 \

@@ -55,7 +55,7 @@ PolReal[Id_String, Momenta_List] :=
         {StringSplit[Id, ""], Momenta}] //
     DeleteCases[#, Null]&
 
-MkAmplitude[In_, Out_, Loops_, Topologies_, LoopPrefix_] := Module[{top, diag, famp, amp},
+MkAmplitude[In_, Out_, Loops_, Topologies_, LoopPrefix_, Filename_] := Module[{top, diag, famp, amp},
     Print["## CreateTopologies[", In, " -> ", Out, ", loops=", Loops, "]"];
     top = CreateTopologies[
         ToExpression[Loops],
@@ -75,6 +75,8 @@ MkAmplitude[In_, Out_, Loops_, Topologies_, LoopPrefix_] := Module[{top, diag, f
             TopologyList[m__][ds__] :>
             TopologyList[m][
                 Sequence @@ List[ds][[ToExpression[StringSplit[Topologies, "+"]]]]]];
+    Print["## Export diagram to ", Filename];
+    Paint[diag, AutoEdit -> False, DisplayFunction -> (Export[Filename, #] &)];
     Print["## CreateFeynAmp"];
     famp = CreateFeynAmp[diag, Truncated -> False];
     Print["## FCFAConvert"];
@@ -98,8 +100,8 @@ $filename = $CommandLine[[5]];
 
 {$i, $o, $l1, $l2, $s1, $s2} = ParseTestId[$testid];
 Print["# ", $i, " -> ", $o, "; l1=", $l1, ", l2=", $l2];
-a1 = MkAmplitude[$i, $o, $l1, $s1, "l"];
-a2 = MkAmplitude[$i, $o, $l2, $s2, "r"];
+a1 = MkAmplitude[$i, $o, $l1, $s1, "l", StringJoin[$filename, "-left.pdf"]];
+a2 = MkAmplitude[$i, $o, $l2, $s2, "r", StringJoin[$filename, "-right.pdf"]];
 me2 = a1*(ComplexConjugate[a2] // FCRenameDummyIndices);
 
 Print["# FermionSpinSum"];

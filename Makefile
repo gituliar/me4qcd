@@ -134,7 +134,7 @@ FORM = tform -w2 -M -t "${TMPDIR}" -ts "${TMPDIR}" -p src -I src -l -f -q
 
 .SECONDEXPANSION:
 
-me2/%.m: $$(guile (me2-prerequisite "$$(notdir $$@)"))
+me2/%.m: src/me2.frm src/me4qcd.h $$(guile (me2-prerequisite "$$(notdir $$@)"))
 	@echo "make $@"
 	$(FORM) $(guile (me2-form-args "$(notdir $@)")) -d ME2=$@ src/me2.frm
 

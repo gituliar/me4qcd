@@ -46,8 +46,8 @@ define AMP_SCM
           ", "))))
   (receive (in out loops) (parse-amplitude-id amplitude)
     (format #t "output= 'amp/~a.h' ;\n\n" amplitude)
-    (format #t "style= 'amp/form.sty' ;\n\n")
-    (format #t "model= 'amp/qcd.mod' ;\n\n")
+    (format #t "style= 'src/form.sty' ;\n\n")
+    (format #t "model= 'src/qcd.mod' ;\n\n")
     (format-momenta "in" in "p" "q")
     (format-momenta "out" out "k" "k")
     (format #t "loops= ~d ;\n\n" loops)
@@ -65,10 +65,12 @@ amp-clean:
 
 amp/%.dat:
 	@echo "make $@"
+	@$(guile (mkdir "amp"))
 	@$(guile (save-qgraf.dat "$*" "$@"))
 
-amp/%.h: amp/%.dat amp/qcd.mod amp/form.sty
+amp/%.h: amp/%.dat src/qcd.mod src/form.sty
 	@echo "make $@"
+	mkdir -p amp
 	@rm -f "$@"
 	@ln -s "amp/$*.dat" qgraf.dat
 	@qgraf | tee  $(@:.h=.log)
@@ -136,6 +138,7 @@ FORM = tform -w2 -M -t "${TMPDIR}" -ts "${TMPDIR}" -p src -I src -l -f -q
 
 me2/%.m: src/me2.frm src/me4qcd.h $$(guile (me2-prerequisite "$$(notdir $$@)"))
 	@echo "make $@"
+	@mkdir -p me2
 	$(FORM) $(guile (me2-form-args "$(notdir $@)")) -d ME2=$@ src/me2.frm
 
 me2-clean:

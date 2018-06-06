@@ -29,6 +29,14 @@ Skip;
   ;
 #endif
 
+#ifdef `SET'
+id amp(n1?!{,`SET'}) = 0;
+#endif
+
+#ifdef `SETx'
+id ampx(n1?!{,`SETx'}) = 0;
+#endif
+
 #do V={VQQA, VQQG, VGGG} 
 id `V'(n1?pos_,k1?, n2?,k2?, n3?,k3?) = `V'(i(n1),k1, n2,k2, n3,k3);
 id `V'(n1?,k1?, n2?pos_,k2?, n3?,k3?) = `V'(n1,k1, i(n2),k2, n3,k3);
@@ -87,12 +95,6 @@ id `V'(n1?,k1?, n2?,k2?, e(n3?even_),k3?) = `V'(n1,k1, n2,k2, e(n3),-k3);
 *.end
 
 L ME2 = AMP*AMPx;
-#ifdef `SET'
-id amp(n1?!{,`SET'}) = 0;
-#endif
-#ifdef `SETx'
-id ampx(n1?!{,`SETx'}) = 0;
-#endif
 *id amp(ex1?)*ampx(ex2?) = amp(ex1,ex2);
 id amp(ex1?)*ampx(ex2?) = 1;
 .sort

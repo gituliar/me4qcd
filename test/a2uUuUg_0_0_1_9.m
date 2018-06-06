@@ -1,4 +1,4 @@
-(9*((-1792*sp[k1, k4]*sp[k2, k2]*sp[k2, k3]*sp[k2, k4])/
+4/9*(9*((-1792*sp[k1, k4]*sp[k2, k2]*sp[k2, k3]*sp[k2, k4])/
     (3*(sp[k2, k2] + 2*sp[k2, k3] + sp[k3, k3])^2*
      (sp[k2, k2] + 2*sp[k2, k3] + 2*sp[k2, k5] + sp[k3, k3] + 2*sp[k3, k5] + 
       sp[k5, k5])*(sp[k4, k4] + 2*sp[k4, k5] + sp[k5, k5])*

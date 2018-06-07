@@ -16,6 +16,9 @@ ScalarProduct[p4,p4] = 0;
 ScalarProduct[p5,p5] = 0;
 SUNN = 3;
 
+(* Split a test ID like "abc2def_n1_n2_l1+l2+l3_r1+r2" into
+ * {"abc", "def", "n1", "n2", "l1+l2+l3", "r1+r2"}
+ *)
 ParseTestId[id_String] := Module[{i, o, l1, l2, s1, s2},
     {{i, o, l1, l2, s1, s2}} =
         StringCases[id,
@@ -42,18 +45,6 @@ Fields[Id_String] := Map[
         "g", V[5]
     ]&,
     StringSplit[Id, ""]]
-
-PolVirt[Id_String, Momenta_List] :=
-    MapThread[
-        Switch[#1, "a", #2, _, Null]&,
-        {StringSplit[Id, ""], Momenta}] //
-    DeleteCases[#, Null]&
-
-PolReal[Id_String, Momenta_List] :=
-    MapThread[
-        Switch[#1, "g", #2, _, Null] &,
-        {StringSplit[Id, ""], Momenta}] //
-    DeleteCases[#, Null]&
 
 MkAmplitude[In_, Out_, Loops_, Topologies_, LoopPrefix_, Filename_] := Module[{top, diag, famp, amp},
     Print["## CreateTopologies[", In, " -> ", Out, ", loops=", Loops, "]"];
@@ -131,9 +122,7 @@ Do[
     Print["# DoPolarizationSums[..., ", moment, ", GaugeTrickN -> 4]"];
     me2 = DoPolarizationSums[me2, moment, 0, VirtualBoson -> True, GaugeTrickN -> 4];
     me2 = me2 /. $onshell,
-    {moment, Join[
-        PolVirt[$i, MomentaNames[$i, "p", "q"]],
-        PolVirt[$o, MomentaNames[$o, "k", "k"]]]}
+    {moment, If[StringLength[$i] == 1, {q}, {}]}
 ];
 
 Do[
@@ -141,8 +130,8 @@ Do[
     me2 = DoPolarizationSums[me2, moment, 0];
     me2 = me2 /. $onshell,
     {moment, Join[
-        PolReal[$i, MomentaNames[$i, "p", "q"]],
-        PolReal[$o, MomentaNames[$o, "k", "k"]]]}
+        If[StringLength[$i] == 1, {}, MomentaNames[$i, "p", "q"]],
+        MomentaNames[$o, "k", "k"]]}
 ];
 
 Print["# Expand"];

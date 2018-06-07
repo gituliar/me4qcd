@@ -21,6 +21,6 @@
 
     [g, g, g;     vertex_id='VGGG', vertex_factor='1']
 
-#    [g, g, g, g;  vertex_id='VGGGG', vertex_factor='1']
+    [g, g, g, g;  vertex_id='VGGGG', vertex_factor='1']
 #
 #     vertex_id is a name of a vertex function in FORM

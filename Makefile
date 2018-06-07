@@ -3,7 +3,17 @@ ME2 := me2/a2uUg_0_0.m \
        me2/a2uUuU_0_0.m \
        me2/a2uUggg_0_0.m \
        me2/a2uUuUg_0_0.m \
-       me2/a2uUuUg_0_0_1_1.m
+       me2/a2uUuUg_0_0_1_1.m \
+       \
+       me2/gg2gg_0_0.m \
+       me2/g2ggg_0_0.m \
+       me2/gg2ggg_0_0.m \
+       me2/gg2gggg_0_0.m \
+       me2/uU2uU_0_0.m \
+       me2/uU2uUuU_0_0.m \
+       me2/uU2uUgg_0_0.m \
+       me2/uU2uUuU_0_0_1_4.m \
+       me2/uU2gg_0_0.m
 
 all: $(ME2)
 
@@ -23,6 +33,13 @@ define AMP_SCM
 (use-modules (ice-9 receive))
 (use-modules (ice-9 regex))
 (use-modules (srfi srfi-1))
+(define (me2-prerequisite filename)
+
+  (let* ((input (string-split (string-drop-right filename 2) #\_))
+         (arg (lambda (n) (list-ref input n))))
+    (list
+      (string-join (list "amp/" (arg 0) (arg 1) ".h") "")
+      (string-join (list "amp/" (arg 0) (arg 2) ".h") ""))))
 
 (define (parse-amplitude-id amplitude)
   (let* ((m (string-match "([auUdDg]+)2([auUdDg]+)([0-9]+)" amplitude))
@@ -68,7 +85,9 @@ amp/%.dat:
 	@$(guile (mkdir "amp"))
 	@$(guile (save-qgraf.dat "$*" "$@"))
 
-amp/%.h: amp/%.dat src/qcd.mod src/form.sty
+AMP=$(sort $(guile (map me2-prerequisite (string-split "$(notdir $(ME2))" \#\space))))
+
+$(AMP): amp/%.h: amp/%.dat src/qcd.mod src/form.sty
 	@echo "make $@"
 	mkdir -p amp
 	@rm -f "$@"
@@ -84,13 +103,6 @@ amp/%.h: amp/%.dat src/qcd.mod src/form.sty
 #
 ###########################################################
 define ME2_SCM
-(define (me2-prerequisite filename)
-  (let* ((input (string-split (string-drop-right filename 2) #\_))
-         (arg (lambda (n) (list-ref input n))))
-    (list
-      (string-join (list "amp/" (arg 0) (arg 1) ".h") "")
-      (string-join (list "amp/" (arg 0) (arg 2) ".h") ""))))
-
 (define (me2-form-args filename)
   (define (make-arg name val)
 	(string-join (list "-d " name "=" val) ""))
@@ -146,8 +158,6 @@ me2-clean:
 
 .PRECIOUS: me2/%.m
 
-AMP=$(sort $(guile (map me2-prerequisite (string-split "$(notdir $(ME2))" \#\space))))
-
 me2-all: $(ME2)
 
 amp-all: $(AMP)
@@ -158,9 +168,9 @@ amp-all: $(AMP)
 #
 ###########################################################
 CHECK := check_uU2uU_0_0 \
-	 check_a2uU_0_0 \
-	 check_a2dD_0_0 \
-	 check_uU2uUg_0_0_1 \
+         check_a2uU_0_0 \
+         check_a2dD_0_0 \
+         check_uU2uUg_0_0_1 \
          check_a2uUgg_0_0_1 \
          check_a2uUgg_0_0_1+3 \
          check_a2uUgg_0_0_3 \
@@ -172,11 +182,15 @@ CHECK := check_uU2uU_0_0 \
          check_a2uUuUg_0_0_1_9 \
          check_a2uUuUg_0_0_9 \
          check_a2uUgg_0_0 \
-         check_a2uUuU_0_0
+         check_a2uUuU_0_0 \
+         check_g2ggg_0_0 \
+         check_gg2gg_0_0 \
+         check_gg2ggg_0_0 \
+         check_uU2gg_0_0
 
 check: $(CHECK)
 
-check_%: me2/%.m test/%.m phony
+$(CHECK): check_%: me2/%.m test/%.m phony
 	@echo "$@"
 	@math -script ./src/check.m $* me2/$*.m test/$*.m
 

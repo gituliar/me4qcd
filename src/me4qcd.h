@@ -155,6 +155,7 @@ argument num;
   id te(n1?even_) = -1;
 endargument;
 id num(ex1?) = ex1;
+.sort
 
 id p1.p1 = 0;
 id p2.p2 = 0;
@@ -169,6 +170,10 @@ id k6.k6 = 0;
 id VGGG( i(n1?),k1?, b?(n2?),k2?, c?(n3?),k3?) = den2(k1,n1) * VGGG(i(n1),k1, b(n2),k2, c(n3),k3);
 id VGGG(a?(n1?),k1?,  i(n2?),k2?, c?(n3?),k3?) = den2(k2,n2) * VGGG(a(n1),k1, i(n2),k2, c(n3),k3);
 id VGGG(a?(n1?),k1?, b?(n2?),k2?,  i(n3?),k3?) = den2(k3,n3) * VGGG(a(n1),k1, b(n2),k2, i(n3),k3);
+id VGGGGi( i(n1?),k1?, b?(n2?),k2?, c?(n3?),k3?, d?(n4?),k4?) = den2(k1,n1) * VGGGGi(i(n1),k1, b(n2),k2, c(n3),k3, d(n4),k4);
+id VGGGGi(a?(n1?),k1?,  i(n2?),k2?, c?(n3?),k3?, d?(n4?),k4?) = den2(k2,n2) * VGGGGi(a(n1),k1, i(n2),k2, c(n3),k3, d(n4),k4);
+id VGGGGi(a?(n1?),k1?, b?(n2?),k2?,  i(n3?),k3?, d?(n4?),k4?) = den2(k3,n3) * VGGGGi(a(n1),k1, b(n2),k2, i(n3),k3, d(n4),k4);
+id VGGGGi(a?(n1?),k1?, b?(n2?),k2?, c?(n3?),k3?,  i(n4?),k4?) = den2(k4,n4) * VGGGGi(a(n1),k1, b(n2),k2, c(n3),k3, i(n4),k4);
 id VQQG(a?(n1?),k1?, b?(n2?),k2?,  i(n3?),k3?) = den2(k3,n3) * VQQG(a(n1),k1, b(n2),k2, i(n3),k3);
 id VQQA(a?(n1?),k1?, b?(n2?),k2?,  i(n3?),k3?) = den2(k3,n3) * VQQA(a(n1),k1, b(n2),k2, i(n3),k3);
 id den2(k1?,n1?)*den2(k2?,n1?) = den(sp(k1));

@@ -118,11 +118,17 @@ me2 = me2 /. $onshell;
 Print["# CalcColorFactor"];
 me2 = me2 // CalcColorFactor;
 
+PolarizedMomenta[particles_String, prefix_String, singlename_String] :=
+    MapThread[
+        If[StringMatchQ[#1, "a" | "g"], #2, Nothing]&,
+        {StringSplit[particles, ""], MomentaNames[particles, prefix, singlename]}]
+
+(* Only a single incoming particle is virtual. The rest are real. *)
 Do[
     Print["# DoPolarizationSums[..., ", moment, ", GaugeTrickN -> 4]"];
     me2 = DoPolarizationSums[me2, moment, 0, VirtualBoson -> True, GaugeTrickN -> 4];
     me2 = me2 /. $onshell,
-    {moment, If[StringLength[$i] == 1, {q}, {}]}
+    {moment, If[StringLength[$i] == 1, PolarizedMomenta[$i, "p", "q"], {}]}
 ];
 
 Do[
@@ -130,8 +136,8 @@ Do[
     me2 = DoPolarizationSums[me2, moment, 0];
     me2 = me2 /. $onshell,
     {moment, Join[
-        If[StringLength[$i] == 1, {}, MomentaNames[$i, "p", "q"]],
-        MomentaNames[$o, "k", "k"]]}
+        If[StringLength[$i] == 1, {}, PolarizedMomenta[$i, "p", "q"]],
+        PolarizedMomenta[$o, "k", "k"]]}
 ];
 
 Print["# Expand"];

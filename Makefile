@@ -170,6 +170,7 @@ amp-all: $(AMP)
 CHECK := check_uU2uU_0_0 \
          check_a2uU_0_0 \
          check_a2dD_0_0 \
+         check_a2uUg_0_0 \
          check_uU2uUg_0_0_1 \
          check_a2uUgg_0_0_1 \
          check_a2uUgg_0_0_1+3 \

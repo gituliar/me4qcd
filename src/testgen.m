@@ -74,7 +74,7 @@ MkAmplitude[In_, Out_, Loops_, Topologies_, LoopPrefix_, Filename_] := Module[{t
     amp = FCFAConvert[
         famp,
         IncomingMomenta -> MomentaNames[In, "p", "q"],
-        OutgoingMomenta -> MomentaNames[Out, "k", "k"],
+        OutgoingMomenta -> MomentaNames[Out, "k", "k1"],
         LoopMomenta -> MomentaNames[ToExpression[Loops], LoopPrefix, StringJoin[LoopPrefix, "1"]],
         UndoChiralSplittings -> True,
         DropSumOver -> True,
@@ -137,7 +137,7 @@ Do[
     me2 = me2 /. $onshell,
     {moment, Join[
         If[StringLength[$i] == 1, {}, PolarizedMomenta[$i, "p", "q"]],
-        PolarizedMomenta[$o, "k", "k"]]}
+        PolarizedMomenta[$o, "k", "k1"]]}
 ];
 
 Print["# Expand"];

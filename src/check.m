@@ -47,7 +47,7 @@ ParseDiagramId[id_String] :=
 RandomDiagramMomenta[id_String] := Module[{i, o, l1, l2},
     {i, o, l1, l2} = ParseDiagramId[id];
     i = MomentaNames[i, "p", "q"];
-    o = MomentaNames[o, "k", "k"];
+    o = MomentaNames[o, "k", "k1"];
     l1 = MomentaNames[ToExpression[l1], "l", "l1"];
     l2 = MomentaNames[ToExpression[l2], "r", "r1"];
     RandomDiagramMomenta[i, o, Join[l1, l2]]
@@ -58,13 +58,13 @@ $Eval[got_, want_, momenta_] := Expand[
         sp[{Ep_,px_,py_,pz_}] :> Ep^2-px^2-py^2-pz^2,
         sp[{Ep_,px_,py_,pz_}, {Eq_,qx_,qy_,qz_}] :> Ep*Eq-px*qx-py*qy-pz*qz,
         amp[_, _] :> 1,
-        color[ex_] :> ex /. {
-            Tf -> 1/2,
-            Ca -> 3,
-            Cf -> 4/3,
-            Nf -> 3,
-            Na -> 8
-        },
+        m -> 4-2*ep,
+        color[ex_] :> ex,
+        Tf -> 1/2,
+        Ca -> 3,
+        Cf -> 4/3,
+        Nf -> 3,
+        Na -> 8,
         d33[c1_, c1_] :> (1/2)^3/(2*N)*(N^2 - 1)*(N^2 - 4),
         d44[c1_, c1_] :> (1/2)^4/(6*N^2)*(N^2 - 1)*(N^4 - 6*N^2 + 18),
         d55[c1_, c1_] :> (1/2)^5/(24*N^3)*(N^2 - 1)*(N^2 - 2)*(N^4 + 24),

@@ -1,12 +1,15 @@
 ME2 := me2/a2uUg_0_0.m \
+       me2/a2uUg_0_1.m \
        me2/a2uUgg_0_0.m \
        me2/a2uUuU_0_0.m \
        me2/a2uUggg_0_0.m \
        me2/a2uUuUg_0_0.m \
        me2/a2uUuUg_0_0_1_1.m \
        \
-       me2/gg2gg_0_0.m \
        me2/g2ggg_0_0.m \
+       me2/g2gg_0_0.m \
+       me2/gg2g_0_0.m \
+       me2/gg2gg_0_0.m \
        me2/gg2ggg_0_0.m \
        me2/gg2gggg_0_0.m \
        me2/uU2uU_0_0.m \
@@ -38,64 +41,23 @@ define AMP_SCM
   (let* ((input (string-split (string-drop-right filename 2) #\_))
          (arg (lambda (n) (list-ref input n))))
     (list
-      (string-join (list "amp/" (arg 0) (arg 1) ".h") "")
-      (string-join (list "amp/" (arg 0) (arg 2) ".h") ""))))
-
-(define (parse-amplitude-id amplitude)
-  (let* ((m (string-match "([auUdDg]+)2([auUdDg]+)([0-9]+)" amplitude))
-         (in (string->list (match:substring m 1)))
-         (out (string->list (match:substring m 2)))
-         (loops (string->number (match:substring m 3))))
-    (values in out loops)))
-
-(define (format-qgraf.dat amplitude)
-  (define (format-momenta tag particles momentum-prefix momentum-1)
-    (if (equal? (length particles) 1)
-      (format #t "~a= ~c[~a] ;\n\n" tag (list-ref particles 0) momentum-1)
-      (format #t "~a= ~a ;\n\n"
-        tag
-        (string-join
-          (map
-            (lambda (p i)
-              (format #f "~c[~a~d]" p momentum-prefix i))
-            particles
-            (iota (length particles) 1))
-          ", "))))
-  (receive (in out loops) (parse-amplitude-id amplitude)
-    (format #t "output= 'amp/~a.h' ;\n\n" amplitude)
-    (format #t "style= 'src/form.sty' ;\n\n")
-    (format #t "model= 'src/qcd.mod' ;\n\n")
-    (format-momenta "in" in "p" "q")
-    (format-momenta "out" out "k" "k")
-    (format #t "loops= ~d ;\n\n" loops)
-    (format #t "loop_momentum= l ;\n\n")
-    (format #t "options= ;\n\n")))
-
-(define (save-qgraf.dat amplitude filename)
-  (with-output-to-file filename
-    (lambda () (format-qgraf.dat amplitude))))
+      (string-join (list "amp/" (arg 0) "_" (arg 1) "_l.h") "")
+      (string-join (list "amp/" (arg 0) "_" (arg 2) "_r.h") ""))))
 endef
 $(guile $(AMP_SCM))
 
 amp-clean:
-	@rm -fv amp/*.h amp/*.log amp/*.dat
+	@rm -fv amp/*.h amp/*.log
 
-amp/%.dat:
+amp/%_l.h:
 	@echo "make $@"
-	@$(guile (mkdir "amp"))
-	@$(guile (save-qgraf.dat "$*" "$@"))
+	@./src/drqgraf -v --form -o $@ $*
 
-AMP=$(sort $(guile (map me2-prerequisite (string-split "$(notdir $(ME2))" \#\space))))
-
-$(AMP): amp/%.h: amp/%.dat src/qcd.mod src/form.sty
+amp/%_r.h:
 	@echo "make $@"
-	mkdir -p amp
-	@rm -f "$@"
-	@ln -s "amp/$*.dat" qgraf.dat
-	@qgraf | tee  $(@:.h=.log)
-	@rm qgraf.dat
+	@./src/drqgraf -v -x --form -o $@ $*
 
-.PRECIOUS: amp/%.dat amp/%.h
+.PRECIOUS: amp/%_l.h amp/%_r.h
 
 ###########################################################
 #
@@ -148,10 +110,10 @@ FORM = tform -w2 -M -t "${TMPDIR}" -ts "${TMPDIR}" -p src -I src -l -f -q
 
 .SECONDEXPANSION:
 
-me2/%.m: src/me2.frm src/me4qcd.h $$(guile (me2-prerequisite "$$(notdir $$@)"))
+me2/%.m: $$(guile (me2-prerequisite "$$(notdir $$@)"))
 	@echo "make $@"
 	@mkdir -p me2
-	$(FORM) $(guile (me2-form-args "$(notdir $@)")) -d ME2=$@ src/me2.frm
+	./src/me4qcd.py $^ $@		
 
 me2-clean:
 	@rm -fv me2/*.m
@@ -183,11 +145,18 @@ CHECK := check_uU2uU_0_0 \
          check_a2uUuUg_0_0_1_9 \
          check_a2uUuUg_0_0_9 \
          check_a2uUgg_0_0 \
+         check_a2uUdD_0_0 \
          check_a2uUuU_0_0 \
+         check_g2uU_0_0 \
+         check_g2gg_0_0 \
          check_g2ggg_0_0 \
+         check_gg2g_0_0 \
          check_gg2gg_0_0 \
+         check_gg2uU_0_0 \
          check_gg2ggg_0_0 \
-         check_uU2gg_0_0
+         check_uU2gg_0_0 \
+         check_uu2uu_0_0 \
+         check_uU2dD_0_0
 
 check: $(CHECK)
 

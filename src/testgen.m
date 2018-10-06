@@ -2,7 +2,6 @@
 $LoadFeynArts = True;
 << FeynCalc`;
 
-ScalarProduct[k,k] = 0;
 ScalarProduct[k1,k1] = 0;
 ScalarProduct[k2,k2] = 0;
 ScalarProduct[k3,k3] = 0;
@@ -66,8 +65,10 @@ MkAmplitude[In_, Out_, Loops_, Topologies_, LoopPrefix_, Filename_] := Module[{t
             TopologyList[m__][ds__] :>
             TopologyList[m][
                 Sequence @@ List[ds][[ToExpression[StringSplit[Topologies, "+"]]]]]];
+    (*
     Print["## Export diagram to ", Filename];
     Paint[diag, AutoEdit -> False, DisplayFunction -> (Export[Filename, #] &)];
+    *)
     Print["## CreateFeynAmp"];
     famp = CreateFeynAmp[diag, Truncated -> False];
     Print["## FCFAConvert"];
@@ -107,7 +108,7 @@ me2 = me2 // PropagatorDenominatorExplicit;
 (* Note: this list never includes q^2 == 0 *)
 $onshell = Map[
     (Pair[Momentum[#, _], Momentum[#, _]] :> 0) &,
-    Join[MomentaNames[$i, "p", "p"], MomentaNames[$o, "k", "k"]]];
+    Join[MomentaNames[$i, "p", "p"], MomentaNames[$o, "k", "k1"]]];
 me2 = me2 /. $onshell
 
 Print["# DiracTrace -> Tr"];
@@ -132,9 +133,14 @@ Do[
 ];
 
 Do[
-    Print["# DoPolarizationSums[..., ", moment, "]"];
-    me2 = DoPolarizationSums[me2, moment, 0];
-    me2 = me2 /. $onshell,
+    If[
+       moment =!= Nothing
+       ,
+       Print["# DoPolarizationSums[..., ", moment, "]"];
+       me2 = DoPolarizationSums[me2, moment, 0];
+       me2 = me2 /. $onshell;
+    ]
+    ,
     {moment, Join[
         If[StringLength[$i] == 1, {}, PolarizedMomenta[$i, "p", "q"]],
         PolarizedMomenta[$o, "k", "k1"]]}

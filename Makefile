@@ -160,7 +160,7 @@ CHECK := check_uU2uU_0_0 \
 
 check: $(CHECK)
 
-$(CHECK): check_%: me2/%.m test/%.m phony
+check_%: me2/%.m test/%.m phony
 	@echo "$@"
 	@math -script ./src/check.m $* me2/$*.m test/$*.m
 

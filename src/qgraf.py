@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""drqgraf - a user-friendly interface to QGRAF
+"""qgraf.py - a user-friendly interface to QGRAF
 
 Usage:
-    drqgraf [--form | --graph] [-v] [-x] [-o FILE] PROCESS
+    qgraf.py [--form | --graph] [-v] [-x] [-o FILE] PROCESS
 
 Arguments:
     -f, --form      Generate in FORM style.
@@ -110,12 +110,14 @@ def mkfile(path, filename, data):
 
 def format_qgraf_dat(process, style, output):
     lst = args['PROCESS'].split('_')
+    print(lst)
     # process may be '<in>2<out>_<n>' or '<in>_<out>_<n>'
     if len(lst) == 3:
         in_mask, out_mask, n = lst
     else:
         in_mask, out_mask = lst[0].split('2')
         n = lst[1]
+    print(in_mask, out_mask)
 
     if len(in_mask) == 1:
         in_p = [in_mask[0]+'[q]']

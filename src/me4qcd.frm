@@ -1,16 +1,7 @@
-*#include me4qcd.h # Declarations
-#: Workspace 1G
-
-*--#[ Declarations :
 #include color.h
 
-CF den, den2, num, GM, gm, sp,w;
-
-* SUn.prc from color.h package
-CF color,Wden;
-S NF,NA;
-S m,ep,I;
-
+CF amp,ampx, color, den, num, gm, sp;
+S  m,ep, NF,NA,  Ca,Cf,Na,Tf,nf;
 
 #define N "200";
 #do i=1,`N'
@@ -27,37 +18,25 @@ Set cii:cii1,...,cii`N';
 Set cie:cie1,...,cie`N';
 Set cji:cji1,...,cji`N';
 Set cje:cje1,...,cje`N';
-Set mu:mu1,...,mu`N';
 Set mui:mui1,...,mui`N';
 Set mue:mue1,...,mue`N';
 
-CF e,i, a,b,c,d, te,ti;
 
-S  Ca,Cf,Na,Tf,nf;
-
-* QGRAF variables
-S  n,eps;
-CF amp,ampx;
-CF Vggg,Vgggg,vgggg,Vqqg,Vqqa;
+* Feynman rules
+CF Vqqg,Vqqa,Vggg,Vgggg;
 CF Pu, Pd, Pg, Pax, Pux,PUx, Pdx,PDx, Pgx;
 CF Fa, Fu,FU, Fd,FD, Fg;
+CF e,i;
 
-Dimension m;
-#do i=0,99
-I v`i'=m;
-I s`i';
-#enddo
-
-V k,k1,...,k9;
-set ks: k1,...,k9;
+* Momenta
+V k1,...,k9;
 V l1,...,l9;
-V r1,...,r9;
-V p,p1,...,p9;
+V p1,p2;
 V q;
 
-S ex,ex1,ex2,ex3;
+* Helpers
+S ex1,ex2,ex3;
 S n1,...,n4;
-*--#] Declarations :
 
 #define DEBUG
 
@@ -96,6 +75,10 @@ L AMPx =
 #do F={Fa, Fu, FU, Fd, FD, Fg} 
 id `F'(n1?neg_,k1?) = `F'(n1-`DI',k1);
 #enddo
+#do P={Pu, Pd, Pg} 
+id `P'(n1?pos_, n2?,k1?) = `P'(n1+`DI',n2,k1);
+id `P'(n1?, n2?pos_,k1?) = `P'(n1,n2+`DI',k1);
+#enddo
 #do V={Vqqa, Vqqg, Vggg} 
 id `V'(n1?pos_,k1?, n2?,k2?, n3?,k3?) = `V'(n1+`DI',k1, n2,k2, n3,k3);
 id `V'(n1?,k1?, n2?pos_,k2?, n3?,k3?) = `V'(n1,k1, n2+`DI',k2, n3,k3);
@@ -112,56 +95,42 @@ id Vgggg(n1?neg_,k1?, n2?,k2?, n3?,k3?, n4?,k4?) = Vgggg(n1-`DI',k1, n2,k2, n3,k
 id Vgggg(n1?,k1?, n2?neg_,k2?, n3?,k3?, n4?,k4?) = Vgggg(n1,k1, n2-`DI',k2, n3,k3, n4,k4);
 id Vgggg(n1?,k1?, n2?,k2?, n3?neg_,k3?, n4?,k4?) = Vgggg(n1,k1, n2,k2, n3-`DI',k3, n4,k4);
 id Vgggg(n1?,k1?, n2?,k2?, n3?,k3?, n4?neg_,k4?) = Vgggg(n1,k1, n2,k2, n3,k3, n4-`DI',k4);
-#do P={Pu, Pd, Pg} 
-id `P'(n1?pos_, n2?,k1?) = `P'(n1+`DI',n2,k1);
-id `P'(n1?, n2?pos_,k1?) = `P'(n1,n2+`DI',k1);
-#enddo
 
 * ------------------------------------------------------------------------------
 *                             1.1 Complex Conjugate
 * ------------------------------------------------------------------------------
-
-#do P={Pg} 
-id `P'(?args) = -`P'(?args);
-#enddo
-#do V={Vggg,Vgggg} 
-id `V'(?args) = -`V'(?args);
+* These propagators and vertices change sign when complex conjugates.
+* We also include Vggg since f_abc is antysymmetric.
+#do X={Pg,Pu,Pd, Vqqg,Vqqa,Vgggg,Vggg} 
+id `X'(?args) = -`X'(?args);
 #enddo
 .sort
-
-*Print +ss;
-*.end
-
 
 * ------------------------------------------------------------------------------
 *                                 2. Build ME2
 * ------------------------------------------------------------------------------
-
 L ME2 = AMP*AMPx;
 id amp(ex1?)*ampx(ex2?) = amp(ex1,ex2);
-*id amp(ex1?)*ampx(ex2?) = 1;
 .sort
 Drop AMP,AMPx;
 
 
-* Connect external lines
-#do X={a,u,d,g} 
-id F`X'(n1?even_,k1?)*F`X'(n2?odd_,k1?) = P`X'x(n1,n2,k1);
+* Connect external lines (polarization sum)
+#do x={a,g,u,d} 
+id F`x'(n1?even_,k1?)*F`x'(n2?odd_,k1?) = P`x'x(n1,n2,k1);
 #enddo
-#do X={U,D} 
-id F`X'(n1?even_,k1?)*F`X'(n2?odd_,k1?) = P`X'x(n2,n1,-k1);
-#enddo
-id PUx(?args) = Pux(?args);
-id PDx(?args) = Pdx(?args);
+id FU(n1?even_,k1?)*FU(n2?odd_,k1?) = Pux(n2,n1,k1);
+id FD(n1?even_,k1?)*FD(n2?odd_,k1?) = Pdx(n2,n1,k1);
 .sort
 
 * Make all indices positive
-#do P={Pu, Pd, Pg, Pax, Pux, Pdx, Pgx} 
-id `P'(n1?pos_,n2?,k1?) = `P'(i(n1),n2,k1);
-id `P'(n1?neg_,n2?,k1?) = `P'(e(-n1),n2,k1);
-id `P'(n1?,n2?pos_,k1?) = `P'(n1,i(n2),k1);
-id `P'(n1?,n2?neg_,k1?) = `P'(n1,e(-n2),k1);
+#do P={Pu, Pd, Pg} 
+id `P'(n1?,n2?,k1?) = `P'(i(n1),i(n2),k1);
 #enddo
+#do P={Pax, Pux, Pdx, Pgx} 
+id `P'(n1?,n2?,k1?) = `P'(e(-n1),e(-n2),k1);
+#enddo
+
 #do V={Vqqa, Vqqg, Vggg} 
 id `V'(n1?pos_,k1?, n2?,k2?, n3?,k3?) = `V'(i(n1),k1, n2,k2, n3,k3);
 id `V'(n1?,k1?, n2?pos_,k2?, n3?,k3?) = `V'(n1,k1, i(n2),k2, n3,k3);
@@ -181,50 +150,69 @@ id Vgggg(n1?,k1?, n2?,k2?, n3?,k3?, n4?pos_,k4?) = Vgggg(n1,k1, n2,k2, n3,k3, i(
 
 
 * ------------------------------------------------------------------------------
-*                               2.1 Color Trace
+*                               2.1 Feynman Rules
 * ------------------------------------------------------------------------------
-
+*  References:
+*    - Itzykson, Zuber (pp. 801-802)
+*    - Peskin, Schroeder (pp. 698-700)
+*
+* ------------------------------------------------------------------------------
+*
+*                                Polarization Sum
+*                               ~~~~~~~~~~~~~~~~~~
+id Pax(e(n1?), e(n2?), k1?) = num(-d_(mue[n1],mue[n2]));
+id Pgx(e(n1?), e(n2?), k1?) = color(d_(cje[n1],cje[n2]))* num(-d_(mue[n1],mue[n2]));
+#do Px={Pux,Pdx} 
+id `Px'(e(n1?), e(n2?), k1?) = color(d_(cie[n1],cie[n2]))* num(gm(e(n2),e(n1),k1));
+#enddo
+*
+*                                   Propagatos
+*                                  ~~~~~~~~~~~~
+#do P={Pu,Pd} 
+id `P'(i(n1?), i(n2?), k1?) = color(d_(cii[n1],cii[n2])) * num(i_*gm(i(n2),i(n1),k1)) * den(sp(k1));
+#enddo
+id Pg(i(n1?), i(n2?), k1?) = color(-i_*d_(cji[n1],cji[n2])) * num(d_(mui[n1],mui[n2])) * den(sp(k1));
+*
+*                                    Vertices
+*                                   ~~~~~~~~~~
 #do a={e,i} 
 #do b={e,i} 
-  #do P={Pu, Pd, Pux, Pdx} 
-  id `P'(`a'(n1?), `b'(n2?), k1?) =
-     color(d_(ci`a'[n1],ci`b'[n2]))*`P'(`a'(n1), `b'(n2), k1);
-  #enddo
-  #do P={Pg, Pgx} 
-  id `P'(`a'(n1?), `b'(n2?), k1?) =
-     color(d_(cj`a'[n1],cj`b'[n2]))*`P'(`a'(n1), `b'(n2), k1);
-  #enddo
-
 #do c={e,i} 
   id Vqqa(`a'(n1?),k1?, `b'(n2?),k2?, `c'(n3?),k3?) =
-     color(d_(ci`a'[n1],ci`b'[n2]))*Vqqa(`a'(n1),k1, `b'(n2),k2, `c'(n3),k3);
+      color(d_(ci`a'[n1],ci`b'[n2]))*num(i_*gm(`b'(n2),`a'(n1),mu`c'[n3]));
   id Vqqg(`a'(n1?),k1?, `b'(n2?),k2?, `c'(n3?),k3?) =
-     color(T(ci`a'[n1],ci`b'[n2],cj`c'[n3]))*Vqqg(`a'(n1),k1, `b'(n2),k2, `c'(n3),k3);
+      color(T(ci`a'[n1],ci`b'[n2],cj`c'[n3]))*num(i_*gm(`b'(n2),`a'(n1),mu`c'[n3]));
   id Vggg(`a'(n1?),k1?, `b'(n2?),k2?, `c'(n3?),k3?) =
-     color(f(cj`a'[n1],cj`b'[n2],cj`c'[n3]))*Vggg(`a'(n1),k1, `b'(n2),k2, `c'(n3),k3);
+      color(f(cj`a'[n1],cj`b'[n2],cj`c'[n3])) *
+      num(d_(mu`a'[n1],mu`b'[n2])*(-k2(mu`c'[n3])+k1(mu`c'[n3])) +
+          d_(mu`b'[n2],mu`c'[n3])*(-k3(mu`a'[n1])+k2(mu`a'[n1])) +
+          d_(mu`c'[n3],mu`a'[n1])*(-k1(mu`b'[n2])+k3(mu`b'[n2])));
   #do d={e,i} 
   #do i=1,10
-  id once Vgggg(`a'(n1?),k1?, `b'(n2?),k2?, `c'(n3?),k3?, `d'(n4?),k4?) = -i_*(
-     color(f(cj`a'[n1],cj`b'[n2],cj`i')*f(cj`c'[n3],cj`d'[n4],cj`i')) *
-       num(d_(mu`a'[n1],mu`c'[n3])*d_(mu`b'[n2],mu`d'[n4]) - d_(mu`a'[n1],mu`d'[n4])*d_(mu`b'[n2],mu`c'[n3])) +
-     color(f(cj`a'[n1],cj`c'[n3],cj`i')*f(cj`b'[n2],cj`d'[n4],cj`i')) * 
-       num(d_(mu`a'[n1],mu`b'[n2])*d_(mu`c'[n3],mu`d'[n4]) - d_(mu`a'[n1],mu`d'[n4])*d_(mu`b'[n2],mu`c'[n3])) +
-     color(f(cj`a'[n1],cj`d'[n4],cj`i')*f(cj`b'[n2],cj`c'[n3],cj`i')) *
-       num(d_(mu`a'[n1],mu`b'[n2])*d_(mu`c'[n3],mu`d'[n4]) - d_(mu`a'[n1],mu`c'[n3])*d_(mu`b'[n2],mu`d'[n4]))
-  ) ;
+  id once Vgggg(`a'(n1?),k1?, `b'(n2?),k2?, `c'(n3?),k3?, `d'(n4?),k4?) =
+      -i_*(
+        color(f(cj`a'[n1],cj`b'[n2],cj`i')*f(cj`c'[n3],cj`d'[n4],cj`i')) *
+          num(d_(mu`a'[n1],mu`c'[n3])*d_(mu`b'[n2],mu`d'[n4]) -
+              d_(mu`a'[n1],mu`d'[n4])*d_(mu`b'[n2],mu`c'[n3])) +
+        color(f(cj`a'[n1],cj`c'[n3],cj`i')*f(cj`b'[n2],cj`d'[n4],cj`i')) * 
+          num(d_(mu`a'[n1],mu`b'[n2])*d_(mu`c'[n3],mu`d'[n4]) -
+              d_(mu`a'[n1],mu`d'[n4])*d_(mu`b'[n2],mu`c'[n3])) +
+        color(f(cj`a'[n1],cj`d'[n4],cj`i')*f(cj`b'[n2],cj`c'[n3],cj`i')) *
+          num(d_(mu`a'[n1],mu`b'[n2])*d_(mu`c'[n3],mu`d'[n4]) -
+              d_(mu`a'[n1],mu`c'[n3])*d_(mu`b'[n2],mu`d'[n4]))
+      ) ;
   #enddo
 #enddo
 #enddo
 #enddo
 #enddo
 
-repeat;
-  id color(ex1?)*color(ex2?) = color(ex1*ex2);
-endrepeat;
-
-id color(ex?) = ex;
+* ------------------------------------------------------------------------------
+*                               2.2 Color Trace
+* ------------------------------------------------------------------------------
+id color(ex1?) = ex1;
 .sort
-  
+
 #call docolor;
 
 id cA = Ca;
@@ -235,80 +223,31 @@ id 1/NA = 1/Na;
 *id Tf = Tf*nf;
 .sort
 
-
-
-* ------------------------------------------------------------------------------
-*                               2.2 Feynman Rules
-* ------------------------------------------------------------------------------
-*
-*  References:
-*    - Itzykson, Zuber (pp. 801-802)
-*    - Peskin, Schroeder (pp. 698-700)
-*
-
-*
-*                                   Propagators
-*
-#do P={Pu,Pd}
-id `P'(i(n1?), i(n2?), k1?) = i_*num(gm(i(n2),i(n1),k1)) * den(sp(k1));
-#enddo
-#do P={Pg}
-id `P'(i(n1?), i(n2?), k1?) = -i_*num(d_(mui[n1],mui[n2])) * den(sp(k1));
-#enddo
-
-#do P={Pux,Pdx}
-id `P'(e(n1?), e(n2?), k1?) = num(gm(e(n2),e(n1),k1));
-#enddo
-#do P={Pax,Pgx}
-id `P'(e(n1?), e(n2?), k1?) = num(-d_(mue[n1],mue[n2]));
-#enddo
-
-*
-*                                    Vertices
-*
-#do a={e,i} 
-#do b={e,i} 
-#do c={e,i} 
-#do V={Vqqg,Vqqa}
-id `V'(`a'(n1?),k1?, `b'(n2?),k2?, `c'(n3?),k3?) =
-   i_*num(gm(`b'(n2),`a'(n1),mu`c'[n3])) ;
-#enddo
-#enddo
-#enddo
-#enddo
-
-#do a={e,i} 
-#do b={e,i} 
-#do c={e,i} 
-id Vggg(`a'(n1?),k1?, `b'(n2?),k2?, `c'(n3?),k3?) =
-   -num(
-     d_(mu`a'[n1],mu`b'[n2])*(k2(mu`c'[n3])-k1(mu`c'[n3])) +
-     d_(mu`b'[n2],mu`c'[n3])*(k3(mu`a'[n1])-k2(mu`a'[n1])) +
-     d_(mu`c'[n3],mu`a'[n1])*(k1(mu`b'[n2])-k3(mu`b'[n2]))) ;
-#enddo
-#enddo
-#enddo
-
-repeat;
-*  id num(ex1?)*num(ex2?) = num(ex1*ex2);
-  id num(ex1?) = ex1;
-endrepeat;
+Bracket amp,den,num;
+.sort
+Collect color;
 .sort
 
-*argument num;
-  repeat;
-  id gm(ex1?,ex2?,?arg1)*gm(ex2?,ex3?,?arg2) = gm(ex1,ex3,?arg1,?arg2);
-  endrepeat;
 
-  #do i={1,2,3,4,5}
-  id once gm(ex1?,ex1?,?arg1) = gm(`i',?arg1);
-  repeat;
-  id gm(`i',k1?,?arg)  = g_(`i',k1) *gm(`i',?arg);
+
+* ------------------------------------------------------------------------------
+*                            2.3 Dirac Gamma Trace
+* ------------------------------------------------------------------------------
+id num(ex1?) = ex1;
+
+repeat;
+id gm(ex1?,ex2?,?arg1)*gm(ex2?,ex3?,?arg2) = gm(ex1,ex3,?arg1,?arg2);
+endrepeat;
+
+#do i={1,2,3,4,5}
+id once gm(ex1?,ex1?,?arg1) = gm(`i',?arg1);
+repeat;
+  id gm(`i',k1?,?arg)  = g_(`i',k1)*gm(`i',?arg);
   id gm(`i',mu1?,?arg) = g_(`i',mu1)*gm(`i',?arg);
   id gm(`i') = 1;
-  endrepeat;
-  tracen `i';
-  #enddo
+endrepeat;
+tracen `i';
+#enddo
 
 id q.q = 1;
 id p1.p1 = 0;
@@ -319,44 +258,17 @@ id k3.k3 = 0;
 id k4.k4 = 0;
 id k5.k5 = 0;
 id k6.k6 = 0;
-*endargument;
-
-*Print +ss;
-*.end
 
 id p1?.p2? = sp(p1,p2);
-argument;
-id p1?.p2? = sp(p1,p2);
-endargument;
 
-
-Bracket amp,den;
+Bracket amp,color,den;
 .sort
 Collect num;
 Print +ss;
+
+* ------------------------------------------------------------------------------
+*                                   3 Output
+* ------------------------------------------------------------------------------
 Format Mathematica;
 #write <`ME2'> "(%E)", ME2
-.end
-
-
-
-id m = 4-2*ep;
-
-id Ca = 3;
-id Cf = 4/3;
-id Tf = 1/2;
-id Na = 8;
-.sort
-
-Bracket den;
-.sort
-Collect num;
-.sort
-
-#ifdef `DEBUG'
-  Print +ss;
-#endif
-Format Mathematica;
-#write <`ME2'> "(%E)", ME2
-
 .end

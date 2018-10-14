@@ -5,7 +5,7 @@ Usage:
     me4qcd.py AMP1 AMP2 ME2
 
 Arguments:
-    AMP1 AMP2       Amplitude files to use (made by `drqgraf --form')
+    AMP1 AMP2       Amplitude files to use (outpur of `qgraf.py --form')
     ME2
 """
 
@@ -34,7 +34,6 @@ if __name__ == "__main__":
           '-d', 'AMPx='+args['AMP2'],
           '-d', 'ME2='+args['ME2'],
           os.path.join(ROOT_PATH,'src/me4qcd.frm')]
-        print(cmd)
         try:
             subprocess.call(cmd, shell=False)
         except Exception as error:

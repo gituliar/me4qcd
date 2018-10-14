@@ -264,6 +264,7 @@ id p1?.p2? = sp(p1,p2);
 Bracket amp,color,den;
 .sort
 Collect num;
+.sort
 Print +ss;
 
 * ------------------------------------------------------------------------------

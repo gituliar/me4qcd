@@ -47,7 +47,10 @@ amp-clean:
 ###########################################################
 .SECONDEXPANSION:
 
-me2/%.m: $$(guile (me2-prerequisite "$$(notdir $$@)"))
+me2/%.m:: me2/%.m.gz
+	gunzip -k $<
+
+me2/%.m:: $$(guile (me2-prerequisite "$$(notdir $$@)"))
 	@echo "make $@"
 	@mkdir -p me2
 	./src/me4qcd.py $^ $@		
@@ -65,7 +68,9 @@ me2-clean:
 
 # Three-point functions
 CHECK3 = check_a2uU_0_0 \
-         check_a2dD_0_0
+         check_a2dD_0_0 \
+         check_g2gg_0_0 \
+         check_g2uU_0_0
 
 # Four-point functions
 CHECK4 = check_ug2ug_0_0 \
@@ -86,14 +91,11 @@ CHECK4 = check_ug2ug_0_0 \
 CHECK5 = check_a2uUgg_0_0 \
          check_a2uUuU_0_0 \
          check_a2uUdD_0_0 \
+         check_g2uUgg_0_0 \
+         check_gg2ggg_0_0 \
          check_ug2ugg_0_0 \
+         check_uu2uug_0_0 \
          check_uU2uUg_0_0
-
-# FAIL: bug in me4qcd
-
-# Too complicated for FeynCalc
-#         check_g2gggg_0_0 \
-#         check_gg2ggg_0_0 \
 
 CHECK6 = check_a2uUuUg_0_0 \
          check_a2uUggg_0_0 \

@@ -108,7 +108,7 @@ check-all: $(CHECK)
 
 check_%: me2/%.m test/%.m phony
 	@echo "$@"
-	#@math -script ./src/check.m $* me2/$*.m test/$*.m
+	@math -script ./src/check.m $* me2/$*.m test/$*.m
 
 test/%.m: src/testgen.m
 	@echo "make '$@'"

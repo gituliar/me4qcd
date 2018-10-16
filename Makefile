@@ -93,6 +93,8 @@ me2/%.m.gz: $$(guile (me2-prerequisite "$$(notdir $$(subst .gz,,$$@))"))
 	@./src/me4qcd.py $^ $(subst .gz,,$@)
 	@gzip $(subst .gz,,$@)
 
+.PRECIOUS: me2/%.m me2/%.m.gz
+
 ###########################################################
 #                                                         #
 #                      III. TESTS                         #

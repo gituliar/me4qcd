@@ -57,9 +57,10 @@ $Eval[got_, want_, momenta_] := Expand[
     {got, want} /. momenta //. {
         sp[{Ep_,px_,py_,pz_}] :> Ep^2-px^2-py^2-pz^2,
         sp[{Ep_,px_,py_,pz_}, {Eq_,qx_,qy_,qz_}] :> Ep*Eq-px*qx-py*qy-pz*qz,
-        amp[_, _] :> 1,
+        amp[__] :> 1,
         m -> 4-2*ep,
         color[ex_] :> ex,
+        col[ex_] :> ex,
         Tf -> 1/2,
         Ca -> 3,
         Cf -> 4/3,

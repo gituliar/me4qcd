@@ -1,2 +1,3 @@
-*.log
+me2/*.raw
+me2/*.sort
 *.sw?

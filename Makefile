@@ -29,15 +29,14 @@ CHECK5 = check_a2uUgg_0_0 \
          check_uu2uug_0_0 \
          check_uU2uUg_0_0
 
-CHECK6 = check_a2uUuUg_0_0 \
-         check_a2uUggg_0_0 \
-         check_a2uUdDg_0_0
+check-3: $(CHECK3)
+check-4: $(CHECK4)
+check-5: $(CHECK5)
+check-all: $(CHECK3) $(CHECK4) $(CHECK5)
 
 
 help:
 	@echo "Usage: make check_<process>"
-
-clean: clean-me2
 
 ifneq "$(filter guile,$(.FEATURES))" "guile"
     $(error This Makefile requires GNU make with Guile support)
@@ -53,13 +52,40 @@ define AMP_SCM
 (use-modules (ice-9 receive))
 (use-modules (ice-9 regex))
 (use-modules (srfi srfi-1))
-(define (me2-prerequisite filename)
 
-  (let* ((input (string-split (string-drop-right filename 2) #\_))
+(define (basename2 path)
+  (car (string-split (basename path) #\.)))
+
+(define (me4qcd-init-amps path)
+  (let* ((process (basename2 path))
+         (input (string-split process #\_))
          (arg (lambda (n) (list-ref input n))))
     (list
-      (string-join (list "amp/" (arg 0) "_" (arg 1) "_l.h") "")
-      (string-join (list "amp/" (arg 0) "_" (arg 2) "_r.h") ""))))
+      (string-join (list "amp/" (arg 1) "_" (arg 2) "_l.h") "")
+      (string-join (list "amp/" (arg 1) "_" (arg 3) "_r.h") ""))))
+
+
+(define (get-args target)
+  (let ((n (string-index target #\_)))
+    (list
+      (substring target 0 n)
+      (substring target (+ n 1) (string-length target)))))
+
+(define (command target)
+  (car (get-args target)))
+
+(define (process target)
+  (cadr (get-args target)))
+
+
+(define (me4qcd-args target in-suf out-suf)
+  (let* ((n (string-index target #\_))
+         (command (substring target 0 n))
+         (process (substring target (+ n 1) (string-length target))))
+    (list
+      command
+      (string-join (list "me2/" process in-suf) "")
+      (string-join (list "me2/" process  out-suf) ""))))
 endef
 $(guile $(AMP_SCM))
 
@@ -83,15 +109,46 @@ clean-amp:
 ###########################################################
 .SECONDEXPANSION:
 
-me2/%.m: me2/%.m.gz
-	@echo "make $@"
-	@gunzip -k $<
+# ======================================================= #
+#                Main Calculation Steps                   #
+# ======================================================= #
+all_%: init_% sort_% col_% den_% num_%
+	@echo "make '$@'"
 
-me2/%.m.gz: $$(guile (me2-prerequisite "$$(notdir $$(subst .gz,,$$@))"))
-	@echo "make $@"
-	@mkdir -p me2
-	@./src/me4qcd.py $^ $(subst .gz,,$@)
-	@gzip $(subst .gz,,$@)
+me2/%.m: me2/%.h
+	@echo "make '$@'"
+	@./src/me4qcd.py frm2math $< $@
+.PRECIOUS: me2/%.m
+
+me2/%.h: all_% collect_%
+	@echo "make '$@'"
+
+init_%: $$(guile (me4qcd-init-amps "$$@")) phony
+	@echo "make '$@'"
+	@./src/me4qcd.py init $(wordlist 1,2,$^) me2/$(guile (process "$@")).raw
+
+sort_%: phony
+	@./src/me4qcd.py $(guile (me4qcd-args "$@" ".raw" ".sort"))
+
+col_%: phony
+	@echo "make '$@'"
+	@./src/me4qcd.py $(guile (me4qcd-args "$@" ".sort" ""))
+
+num_%: phony
+	@echo "make '$@'"
+	@./src/me4qcd.py $(guile (me4qcd-args "$@" ".sort" ""))
+
+den_%: phony
+	@echo "make '$@'"
+	@cp -n me2/$(guile (process "$@")).sort/*.den.h me2/$(guile (process "$@")) 2> /dev/null | true
+
+collect_%: phony
+	@echo "make '$@'"
+	@./src/me4qcd.py $(guile (me4qcd-args "$@" "" ".h"))
+
+clean_%: phony
+	@echo "make '$@'"
+	@rm -r me2/$(guile (process "$@"))*
 
 .PRECIOUS: me2/%.m me2/%.m.gz
 
@@ -100,13 +157,7 @@ me2/%.m.gz: $$(guile (me2-prerequisite "$$(notdir $$(subst .gz,,$$@))"))
 #                      III. TESTS                         #
 #                                                         #
 ###########################################################
-CHECK := $(CHECK3) $(CHECK4) $(CHECK5) $(CHECK6)
-
-check-3: $(CHECK3)
-check-4: $(CHECK4)
-check-5: $(CHECK5)
-check-6: $(CHECK6)
-check-all: $(CHECK)
+CHECK := $(CHECK3) $(CHECK4) $(CHECK5)
 
 check_%: me2/%.m test/%.m phony
 	@echo "$@"
@@ -116,12 +167,6 @@ test/%.m: src/testgen.m
 	@echo "make '$@'"
 	@math -script ./src/testgen.m $* $@
 
-KEEP_M  := $(patsubst check_%,me2/%.m,$(CHECK3) $(CHECK4))
-KEEP_GZ := $(patsubst check_%,me2/%.m.gz,$(CHECK5) $(CHECK6))
-
-clean-me2:
-	@rm -vf $(filter-out $(KEEP_M) $(KEEP_GZ),$(wildcard me2/*))
-
-.PRECIOUS: test/%.m $(KEEP_M) $(KEEP_GZ)
+.PRECIOUS: test/%.m
 
 phony:;
